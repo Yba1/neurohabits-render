@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -19,6 +19,7 @@
     </div>
 
     <div id="signupSection">
+      <input id="signupUsername" type="text" placeholder="Username" autocomplete="nickname" maxlength="32">
       <input id="signupEmail" type="email" placeholder="Email" autocomplete="email">
       <input id="signupPassword" type="password" placeholder="Password (min 8 chars)" autocomplete="new-password">
       <button onclick="registerAccount()">Create Account & Send Code</button>
@@ -53,12 +54,13 @@ function showSignin() {
 }
 
 async function registerAccount() {
+  const username = document.getElementById('signupUsername').value.trim();
   const email = document.getElementById('signupEmail').value.trim();
   const password = document.getElementById('signupPassword').value;
   const status = document.getElementById('statusMsg');
 
-  if (!email || !password) {
-    status.textContent = 'Enter both email and password.';
+  if (!username || !email || !password) {
+    status.textContent = 'Enter username, email, and password.';
     return;
   }
 
@@ -68,7 +70,7 @@ async function registerAccount() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ username, email, password })
     });
     const data = await res.json();
     if (!res.ok) {
@@ -148,3 +150,5 @@ async function signIn() {
 
 </body>
 </html>
+
+

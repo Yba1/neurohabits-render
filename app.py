@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import base64
 import json
@@ -266,15 +266,22 @@ def _normalize_habit(raw: dict[str, Any]) -> dict[str, Any] | None:
 
     done = bool(raw.get("done", raw.get("completed", False)))
 
+    target_value = raw.get("targetValue", raw.get("target"))
+    current_value = raw.get("currentValue", raw.get("value"))
+    time_window = raw.get("timeWindow", raw.get("time"))
+
     return {
         "name": name,
         "text": name,
         "done": done,
         "completed": done,
         "type": str(raw.get("type", "static")),
-        "target": raw.get("target"),
+        "target": target_value,
+        "targetValue": target_value,
         "unit": raw.get("unit"),
-        "value": raw.get("value"),
+        "value": current_value,
+        "currentValue": current_value,
+        "timeWindow": time_window,
         "created": raw.get("created") or datetime.utcnow().isoformat() + "Z",
         "lastUpdated": raw.get("lastUpdated") or datetime.utcnow().isoformat() + "Z",
         "streak": int(raw.get("streak", 0) or 0),
@@ -346,11 +353,14 @@ def auth_register() -> Any:
     payload = request.get_json(silent=True) or {}
     email = _normalize_email(str(payload.get("email", "")))
     password = str(payload.get("password", ""))
+    username = str(payload.get("username", "")).strip()
 
     if not EMAIL_REGEX.match(email):
         return jsonify({"error": "Enter a valid email address."}), 400
     if len(password) < 8:
         return jsonify({"error": "Password must be at least 8 characters."}), 400
+    if len(username) < 2 or len(username) > 32:
+        return jsonify({"error": "Username must be 2-32 characters."}), 400
 
     data = _load_data()
     existing = data.setdefault("users", {}).get(email)
@@ -365,6 +375,7 @@ def auth_register() -> Any:
         "email": email,
         "password_hash": generate_password_hash(password),
         "verified": False,
+        "username": username,
         "created_at": created_at,
     }
 
@@ -385,7 +396,7 @@ def auth_register() -> Any:
     if not ok:
         return jsonify({"error": message}), 500
 
-    return jsonify({"message": message})
+    return jsonify({"message": message, "username": username})
 
 
 @app.post("/api/auth/send-code")
@@ -480,7 +491,14 @@ def auth_me() -> Any:
     email = _current_user_email()
     if not email:
         return jsonify({"authenticated": False}), 401
-    return jsonify({"authenticated": True, "email": email})
+
+    data = _load_data()
+    user = data.get("users", {}).get(email, {})
+    username = str(user.get("username", "")).strip()
+    if not username:
+        username = email.split("@", 1)[0].title()
+
+    return jsonify({"authenticated": True, "email": email, "username": username})
 
 
 @app.post("/api/auth/logout")
@@ -707,3 +725,6 @@ def health() -> Any:
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ── Modal ── */
+    /* â”€â”€ Modal â”€â”€ */
     .modal-overlay {
       position: fixed; inset: 0;
       background: rgba(7,8,12,0.88);
@@ -120,7 +120,7 @@
     .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.35); }
     .btn-primary:active { transform: translateY(0); }
 
-    /* ── Habit item extras ── */
+    /* â”€â”€ Habit item extras â”€â”€ */
     .habit-type-pill {
       font-family: 'DM Mono', monospace; font-size: 9px;
       letter-spacing: 1.2px; text-transform: uppercase;
@@ -148,7 +148,7 @@
       box-shadow: 0 0 10px rgba(0,229,255,0.3);
     }
 
-    /* ── Toast ── */
+    /* â”€â”€ Toast â”€â”€ */
     .toast {
       position: fixed; bottom: 28px; left: 50%;
       transform: translateX(-50%) translateY(20px);
@@ -162,14 +162,14 @@
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── Empty state ── */
+    /* â”€â”€ Empty state â”€â”€ */
     .empty-state { display:none; text-align:center; padding:60px 20px; color:#555870; }
     .empty-state.visible { display:block; }
     .empty-icon { font-size:34px; margin-bottom:12px; opacity:0.35; }
     .empty-state p { font-size:13px; line-height:1.7; }
     .empty-state strong { color:#8a8aaa; font-weight:500; }
 
-    /* ── Animations ── */
+    /* â”€â”€ Animations â”€â”€ */
     @keyframes habitIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
     .habit-item { animation: habitIn 0.22s ease forwards; }
 
@@ -186,9 +186,9 @@
 
     /* Insight card text */
     .insight-card strong { color:#eaeaea; font-weight:500; }
-    /* ═══════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        RADIAL PROGRESS RING
-    ═══════════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .radial-wrap {
       position: relative;
       width: 140px; height: 140px;
@@ -234,9 +234,9 @@
       text-align: right; margin-bottom: 6px;
     }
 
-    /* ═══════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        UPGRADED HABIT CARDS
-    ═══════════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     /* Left accent border per type */
     .habit-item { padding: 0 !important; overflow: hidden; }
     .habit-item-static  { border-left: 3px solid #6c63ff !important; }
@@ -262,7 +262,7 @@
       color: #333; margin-left: 4px; letter-spacing: 1px;
     }
 
-    /* Streak badge upgrade — pulse when >3 */
+    /* Streak badge upgrade â€” pulse when >3 */
     .streak-hot .streak-fire { animation: firePulse 0.8s ease-in-out infinite !important; }
     .streak-badge.streak-hot {
       background: rgba(255,209,102,0.14) !important;
@@ -270,7 +270,7 @@
       color: #ffd166 !important;
     }
 
-    /* AI button upgrade — gradient pill */
+    /* AI button upgrade â€” gradient pill */
     .ai-btn {
       background: linear-gradient(90deg, rgba(108,99,255,0.15), rgba(0,229,255,0.1)) !important;
       border: 1px solid rgba(108,99,255,0.35) !important;
@@ -292,7 +292,7 @@
       box-shadow: 0 0 16px rgba(108,99,255,0.4) !important;
     }
 
-    /* Upgraded progress bar — taller + glow */
+    /* Upgraded progress bar â€” taller + glow */
     .progress-bar-wrap { height: 10px !important; border-radius: 6px !important; }
     .progress-bar-fill { border-radius: 6px !important; }
     .progress-bar-fill.glow { box-shadow: 0 0 12px rgba(108,99,255,0.5); }
@@ -325,9 +325,9 @@
     }
 
 
-    /* ═══════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        AI HABIT PANEL (slide-out)
-    ═══════════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .ai-panel {
       overflow: hidden;
       max-height: 0;
@@ -426,9 +426,9 @@
     .ai-btn:hover { border-color: #6c63ff; color: #eaeaea; background: rgba(108,99,255,0.18); }
     .ai-btn.active { border-color: #6c63ff; color: #6c63ff; background: rgba(108,99,255,0.15); }
 
-    /* ═══════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        WEEKLY REVIEW CARD
-    ═══════════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .weekly-review-card {
       margin-bottom: 14px;
       padding: 16px;
@@ -453,9 +453,9 @@
     }
     .weekly-review-text.loading { color: #444; font-style: italic; }
 
-    /* ═══════════════════════════════════════
+    /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
        SMART NUDGE BANNER
-    ═══════════════════════════════════════ */
+    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
     .nudge-banner {
       display: none;
       align-items: center; gap: 12px;
@@ -478,11 +478,19 @@
 </head>
 <body>
 <script>
+window.NH_USER = null;
 (function () {
   fetch('/api/auth/me')
     .then(function (res) {
       if (!res.ok) {
         window.location.href = 'login.html';
+        return null;
+      }
+      return res.json();
+    })
+    .then(function (data) {
+      if (data && data.authenticated) {
+        window.NH_USER = data;
       }
     })
     .catch(function () {
@@ -514,7 +522,7 @@
   <a href="index.html" class="logo">NeuroHabit</a>
 
   <div class="header-center">
-    <div class="header-title">Your Habit Dashboard</div>
+    <div class="header-title" id="headerTitle">Your Habit Dashboard</div>
     <div class="header-date" id="headerDate"></div>
   </div>
 
@@ -568,7 +576,7 @@
             <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
               <circle cx="28" cy="28" r="27" stroke="rgba(108,99,255,0.2)" stroke-width="1.5" stroke-dasharray="4 4"/>
               <circle cx="28" cy="28" r="18" stroke="rgba(108,99,255,0.12)" stroke-width="1"/>
-              <text x="28" y="34" text-anchor="middle" font-size="18" fill="rgba(108,99,255,0.4)">◎</text>
+              <text x="28" y="34" text-anchor="middle" font-size="18" fill="rgba(108,99,255,0.4)">â—Ž</text>
             </svg>
           </div>
           <p class="empty-title">No habits yet</p>
@@ -582,15 +590,15 @@
 
         <!-- Smart Nudge Banner -->
         <div class="nudge-banner" id="nudgeBanner">
-          <span class="nudge-icon">⚡</span>
+          <span class="nudge-icon">âš¡</span>
           <span id="nudgeText"></span>
-          <button class="nudge-dismiss" onclick="dismissNudge()">×</button>
+          <button class="nudge-dismiss" onclick="dismissNudge()">Ã—</button>
         </div>
 
         <!-- Weekly Review Card -->
         <div class="weekly-review-card" id="weeklyReviewCard" style="display:none">
-          <div class="weekly-review-label">📋 Weekly Coach Debrief</div>
-          <div class="weekly-review-text loading" id="weeklyReviewText">Loading your weekly review…</div>
+          <div class="weekly-review-label">ðŸ“‹ Weekly Coach Debrief</div>
+          <div class="weekly-review-text loading" id="weeklyReviewText">Loading your weekly reviewâ€¦</div>
         </div>
 
         <div class="insights-list" id="insightsList">
@@ -601,7 +609,7 @@
         </div>
         <button class="ask-insight-btn" onclick="generateInsights()">
           <span>Refresh Insights</span>
-          <span class="ask-icons">🔍 ✦</span>
+          <span class="ask-icons">ðŸ” âœ¦</span>
         </button>
       </aside>
 
@@ -609,7 +617,7 @@
 
     <!-- HEATMAP -->
     <section class="heatmap-section">
-      <div class="heatmap-label">Weekly Habit Heatmap — Last 7 Days</div>
+      <div class="heatmap-label">Weekly Habit Heatmap â€” Last 7 Days</div>
       <div class="heatmap-grid" id="heatmapGrid"></div>
     </section>
 
@@ -620,21 +628,21 @@
     <div class="modal">
       <div class="modal-header">
         <h3>New Habit</h3>
-        <button class="modal-close" onclick="closeModal()">×</button>
+        <button class="modal-close" onclick="closeModal()">Ã—</button>
       </div>
       <div class="modal-form">
 
         <div class="form-group">
           <label class="form-label">Habit Name</label>
-          <input class="form-input" id="modalHabitName" placeholder="e.g. Read 20 min, Go to gym…" autocomplete="off">
+          <input class="form-input" id="modalHabitName" placeholder="e.g. Read 20 min, Go to gymâ€¦" autocomplete="off">
           <span class="form-error" id="nameError">Please enter a habit name.</span>
         </div>
 
         <div class="form-group">
           <label class="form-label">Habit Type</label>
           <div class="type-toggle">
-            <button class="type-pill active-static" id="pillStatic"  onclick="setType('static')">✔ Static</button>
-            <button class="type-pill"               id="pillDynamic" onclick="setType('dynamic')">◎ Dynamic</button>
+            <button class="type-pill active-static" id="pillStatic" title="Static = simple done/not done habit (e.g., meditate)." onclick="setType('static')">âœ” Static</button>
+            <button class="type-pill" id="pillDynamic" title="Dynamic = track a number toward a target (e.g., read 20 pages)." onclick="setType('dynamic')">â—Ž Dynamic</button>
           </div>
         </div>
 
@@ -642,12 +650,16 @@
           <label class="form-label" id="targetLabel" style="display:none">Target Value</label>
           <div class="target-row" id="targetRow">
             <input class="form-input" id="modalTarget" type="number" min="1" placeholder="e.g. 20">
-            <input class="form-input" id="modalUnit" placeholder="unit (min, g, pages…)">
+            <input class="form-input" id="modalUnit" placeholder="unit (min, g, pagesâ€¦)">
           </div>
           <span class="form-error" id="targetError">Please enter a target value.</span>
         </div>
 
-        <div class="modal-actions">
+                <div class="form-group">
+          <label class="form-label">Preferred Time</label>
+          <input class="form-input" id="modalTimeWindow" placeholder="e.g. 4-5pm">
+        </div>
+<div class="modal-actions">
           <button class="btn-ghost"   onclick="closeModal()">Cancel</button>
           <button class="btn-primary" onclick="addHabitFromModal()">Add Habit</button>
         </div>
@@ -660,14 +672,16 @@
   <div class="toast" id="toast"></div>
 
   <script>
-  // ─── STATE ───────────────────────────────────
+  // â”€â”€â”€ STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let habits  = JSON.parse(localStorage.getItem('nh_habits'))  || [];
   let history = JSON.parse(localStorage.getItem('nh_history')) || {};
+  let dynamicProgressLog = JSON.parse(localStorage.getItem('nh_dynamic_log')) || {};
   let selectedType = 'static';
 
-  // ─── INIT ────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', () => {
+  // â”€â”€â”€ INIT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  document.addEventListener('DOMContentLoaded', async () => {
     setHeaderDate();
+    await loadSessionAndHabits();
     resetDailyIfNeeded();
     renderAll();
     renderHeatmap();
@@ -676,6 +690,45 @@
   function setHeaderDate() {
     document.getElementById('headerDate').textContent =
       new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+
+  function applyUsernameToHeader() {
+    const title = document.getElementById('headerTitle');
+    const username = window.NH_USER && window.NH_USER.username ? window.NH_USER.username : '';
+    if (title && username) {
+      title.textContent = username + "'s Habit Dashboard";
+    }
+  }
+
+  async function loadSessionAndHabits() {
+    try {
+      if (!window.NH_USER) {
+        const meRes = await fetch('/api/auth/me');
+        if (meRes.ok) {
+          window.NH_USER = await meRes.json();
+        }
+      }
+      applyUsernameToHeader();
+
+      const res = await fetch('/api/habits');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (Array.isArray(data.habits)) {
+        habits = data.habits.map(h => ({
+          text: h.text || h.name || '',
+          type: h.type || 'static',
+          completed: !!(h.completed ?? h.done),
+          currentValue: Number(h.currentValue ?? h.value ?? 0) || 0,
+          targetValue: Number(h.targetValue ?? h.target ?? 1) || 1,
+          unit: h.unit || '',
+          created: h.created || null,
+          lastUpdated: h.lastUpdated || null,
+          streak: Number(h.streak || 0) || 0,
+          timeWindow: h.timeWindow || '',
+        }));
+        localStorage.setItem('nh_habits', JSON.stringify(habits));
+      }
+    } catch (_) {}
   }
 
   function todayKey() { return new Date().toISOString().slice(0,10); }
@@ -696,7 +749,7 @@
     saveHabits();
   }
 
-  // ─── RENDER ──────────────────────────────────
+  // â”€â”€â”€ RENDER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function renderAll() { renderHabits(); renderProgress(); generateInsights(); }
 
   function build7DotGrid(habit) {
@@ -747,12 +800,12 @@
       const check = document.createElement('div');
       if (!isDynamic) {
         check.className = 'habit-check' + (habit.completed ? ' done' : '');
-        check.innerHTML = habit.completed ? '✓' : '';
+        check.innerHTML = habit.completed ? 'âœ“' : '';
         check.onclick   = () => toggleStatic(i);
       } else {
         const pct = dynPct(habit);
         check.className = 'habit-check' + (pct >= 100 ? ' done-dyn' : '');
-        check.innerHTML = pct >= 100 ? '✓' : '';
+        check.innerHTML = pct >= 100 ? 'âœ“' : '';
       }
 
       // Info
@@ -773,10 +826,16 @@
       const streak = habit.streak || 0;
       const sb = document.createElement('span');
       sb.className = 'streak-badge' + (streak >= 3 ? ' streak-hot' : '');
-      sb.innerHTML = `<span class="streak-fire">🔥</span> ${streak} day streak`;
+      sb.innerHTML = `<span class="streak-fire">ðŸ”¥</span> ${streak} day streak`;
 
       meta.appendChild(tp);
       meta.appendChild(sb);
+      if (habit.timeWindow) {
+        const tb = document.createElement('span');
+        tb.className = 'streak-badge';
+        tb.textContent = '⏰ ' + habit.timeWindow;
+        meta.appendChild(tb);
+      }
       info.appendChild(name);
       info.appendChild(meta);
 
@@ -811,17 +870,17 @@
         info.appendChild(row);
       }
 
-      // AI button — gradient pill
+      // AI button â€” gradient pill
       const aib = document.createElement('button');
       aib.className = 'ai-btn';
       aib.id = 'ai-btn-' + i;
-      aib.innerHTML = '✦ AI';
+      aib.innerHTML = 'âœ¦ AI';
       aib.onclick = () => toggleAIPanel(i);
 
       // Delete
       const del = document.createElement('button');
       del.className = 'delete-btn';
-      del.innerHTML = '×';
+      del.innerHTML = 'Ã—';
       del.onclick   = () => deleteHabit(i);
 
       // AI slide-out panel
@@ -849,12 +908,12 @@
     });
   }
 
-  // ─── ACTIONS ─────────────────────────────────
+  // â”€â”€â”€ ACTIONS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function toggleStatic(i) {
     const h = habits[i], was = h.completed;
     h.completed = !h.completed;
     h.lastUpdated = new Date().toISOString();
-    if (h.completed && !was) { updateStreak(h); showToast('✓  "' + h.text + '" marked complete!'); }
+    if (h.completed && !was) { updateStreak(h); showToast('âœ“  "' + h.text + '" marked complete!'); }
     saveHabits(); renderAll(); renderHeatmap();
   }
 
@@ -863,8 +922,9 @@
     h.currentValue = val;
     h.completed    = val >= (h.targetValue || 1);
     h.lastUpdated  = new Date().toISOString();
+    logDynamicProgress(h);
 
-    // Surgical DOM update — no full re-render so the input keeps focus
+    // Surgical DOM update â€” no full re-render so the input keeps focus
     const li = document.querySelectorAll('#habitList .habit-item')[i];
     if (li) {
       const pct   = Math.min(100, Math.round((val / (h.targetValue || 1)) * 100));
@@ -876,12 +936,12 @@
       if (pl)    pl.textContent  = pct + '%';
       if (check) {
         check.className = 'habit-check' + (pct >= 100 ? ' done-dyn' : '');
-        check.innerHTML = pct >= 100 ? '✓' : '';
+        check.innerHTML = pct >= 100 ? 'âœ“' : '';
       }
       if (name) { pct >= 100 ? name.classList.add('done') : name.classList.remove('done'); }
     }
 
-    if (h.completed && !was) { updateStreak(h); showToast('🎯  "' + h.text + '" target reached!'); }
+    if (h.completed && !was) { updateStreak(h); showToast('ðŸŽ¯  "' + h.text + '" target reached!'); }
     saveHabits();
     renderProgress();
     renderHeatmap();
@@ -891,10 +951,10 @@
     const name = habits[i].text;
     habits.splice(i, 1);
     saveHabits(); renderAll(); renderHeatmap();
-    showToast('🗑  "' + name + '" removed.');
+    showToast('ðŸ—‘  "' + name + '" removed.');
   }
 
-  // ─── STREAK ──────────────────────────────────
+  // â”€â”€â”€ STREAK â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function updateStreak(h) {
     if (!h.lastUpdated) { h.streak = 1; return; }
     const last = new Date(h.lastUpdated), today = new Date();
@@ -903,7 +963,7 @@
     h.streak = (diff === 0 || diff === 1) ? (h.streak || 0) + 1 : 1;
   }
 
-  // ─── PROGRESS ────────────────────────────────
+  // â”€â”€â”€ PROGRESS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function dynPct(h) { return Math.round(((h.currentValue||0) / (h.targetValue||1)) * 100); }
 
   function calcOverallPct() {
@@ -921,7 +981,7 @@
     fill.style.width = pct + '%';
     if (pct > 0) fill.classList.add('glow'); else fill.classList.remove('glow');
 
-    // Radial ring — circumference = 2πr = 2π*50 ≈ 314
+    // Radial ring â€” circumference = 2Ï€r = 2Ï€*50 â‰ˆ 314
     const circumference = 314;
     const offset = circumference - (pct / 100) * circumference;
     const radial = document.getElementById('radialFill');
@@ -955,7 +1015,7 @@
     });
   }
 
-  // ─── SAVE ────────────────────────────────────
+  // â”€â”€â”€ SAVE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function saveHabits() {
     localStorage.setItem('nh_habits', JSON.stringify(habits));
     // Sync to Flask backend
@@ -963,10 +1023,10 @@
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ habits })
-    }).catch(() => {}); // silent fail — localStorage is source of truth
+    }).catch(() => {}); // silent fail â€” localStorage is source of truth
   }
 
-  // ─── MODAL ───────────────────────────────────
+  // â”€â”€â”€ MODAL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function openModal() {
     selectedType = 'static';
     syncPills();
@@ -982,6 +1042,7 @@
     document.getElementById('modalHabitName').value = '';
     document.getElementById('modalTarget').value    = '';
     document.getElementById('modalUnit').value      = '';
+    document.getElementById('modalTimeWindow').value = '';
     clearErrors();
   }
 
@@ -1009,6 +1070,7 @@
     const text   = document.getElementById('modalHabitName').value.trim();
     const target = parseFloat(document.getElementById('modalTarget').value);
     const unit   = document.getElementById('modalUnit').value.trim();
+    const timeWindow = document.getElementById('modalTimeWindow').value.trim();
     let valid = true;
 
     if (!text) {
@@ -1028,12 +1090,13 @@
       completed: false, currentValue: 0,
       targetValue: selectedType === 'dynamic' ? target : 1,
       unit: unit || '',
+      timeWindow: timeWindow || '',
       created: new Date().toISOString(), lastUpdated: null, streak: 0
     });
 
     saveHabits(); renderAll(); renderHeatmap();
     closeModal();
-    showToast('✦  "' + text + '" added!');
+    showToast('âœ¦  "' + text + '" added!');
   }
 
   // Modal keyboard / overlay close
@@ -1046,7 +1109,7 @@
       addHabitFromModal();
   });
 
-  // ─── HEATMAP ─────────────────────────────────
+  // â”€â”€â”€ HEATMAP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function renderHeatmap() {
     const grid = document.getElementById('heatmapGrid');
     grid.innerHTML = '';
@@ -1070,35 +1133,112 @@
     }
   }
 
-  // ─── AI INSIGHTS ─────────────────────────────
+  // â”€â”€â”€ AI INSIGHTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const insightFns = [
     h => {
       const done = h.filter(x => x.completed).length;
       if (done === h.length && h.length > 0)
-        return { tag:'🏆 Champion', text:`All <strong>${h.length}</strong> habits done today. You're on fire!` };
-      return { tag:'📊 Progress', text:`<strong>${done} of ${h.length}</strong> habits completed today.` };
+        return { tag:'ðŸ† Champion', text:`All <strong>${h.length}</strong> habits done today. You're on fire!` };
+      return { tag:'ðŸ“Š Progress', text:`<strong>${done} of ${h.length}</strong> habits completed today.` };
     },
     h => {
-      if (!h.length) return { tag:'💡 Tip', text:'Start with 2–3 small habits to build momentum.' };
+      if (!h.length) return { tag:'ðŸ’¡ Tip', text:'Start with 2â€“3 small habits to build momentum.' };
       const best = h.reduce((a,b) => (b.streak||0) > (a.streak||0) ? b : a);
-      return { tag:'🔥 Best Streak', text:`<strong>"${best.text}"</strong> leads at ${best.streak || 0} consecutive days.` };
+      return { tag:'ðŸ”¥ Best Streak', text:`<strong>"${best.text}"</strong> leads at ${best.streak || 0} consecutive days.` };
     },
     h => {
       const dyn  = h.filter(x => x.type === 'dynamic');
-      if (!dyn.length) return { tag:'💡 Tip', text:'Try a <strong>dynamic habit</strong> to track goals like reading minutes or protein intake.' };
+      if (!dyn.length) return { tag:'ðŸ’¡ Tip', text:'Try a <strong>dynamic habit</strong> to track goals like reading minutes or protein intake.' };
       const near = dyn.filter(x => dynPct(x) >= 70 && !x.completed);
-      if (near.length) return { tag:'⚡ Almost There', text:`You're close on <strong>${near.length}</strong> dynamic goal${near.length>1?'s':''}. Push through!` };
-      return { tag:'💡 Tip', text:'Log values on your dynamic habits to watch your progress bars grow.' };
+      if (near.length) return { tag:'âš¡ Almost There', text:`You're close on <strong>${near.length}</strong> dynamic goal${near.length>1?'s':''}. Push through!` };
+      return { tag:'ðŸ’¡ Tip', text:'Log values on your dynamic habits to watch your progress bars grow.' };
     },
     h => {
       const pending = h.filter(x => !x.completed);
-      if (!pending.length) return { tag:'🌟 All Done', text:'Every habit complete — enjoy your day!' };
+      if (!pending.length) return { tag:'ðŸŒŸ All Done', text:'Every habit complete â€” enjoy your day!' };
       const next = pending.find(x => x.type === 'static') || pending[0];
-      return { tag:'👆 Next Up', text:`Knock out <strong>"${next.text}"</strong> next.` };
+      return { tag:'ðŸ‘† Next Up', text:`Knock out <strong>"${next.text}"</strong> next.` };
     },
-    () => ({ tag:'🧠 Science', text:'Habit stacking — pairing a new habit with an existing one — triples success rates.' }),
-    () => ({ tag:'⏰ Timing',  text:'Morning habit completion averages <strong>45% higher</strong> than evening habits.' }),
+    () => ({ tag:'ðŸ§  Science', text:'Habit stacking â€” pairing a new habit with an existing one â€” triples success rates.' }),
+    () => ({ tag:'â° Timing',  text:'Morning habit completion averages <strong>45% higher</strong> than evening habits.' }),
   ];
+
+  function roundGoalSuggestion(value) {
+    if (value >= 20) return Math.max(1, Math.round(value / 5) * 5);
+    if (value >= 10) return Math.max(1, Math.round(value));
+    return Math.max(1, Math.round(value));
+  }
+
+  function logDynamicProgress(habit) {
+    if (!habit || habit.type !== 'dynamic' || !habit.text) return;
+    const key = habit.text.trim().toLowerCase();
+    if (!key) return;
+
+    const day = todayKey();
+    const target = Number(habit.targetValue || 1) || 1;
+    const value = Number(habit.currentValue || 0) || 0;
+
+    const entries = Array.isArray(dynamicProgressLog[key]) ? dynamicProgressLog[key] : [];
+    const rest = entries.filter(e => e && e.date !== day);
+    rest.push({ date: day, value, target });
+    dynamicProgressLog[key] = rest.slice(-14);
+    localStorage.setItem('nh_dynamic_log', JSON.stringify(dynamicProgressLog));
+  }
+
+  function generateTargetGoalSuggestions() {
+    const suggestions = [];
+
+    habits.forEach((h, habitIndex) => {
+      if (h.type !== 'dynamic') return;
+      const key = (h.text || '').trim().toLowerCase();
+      const rows = (dynamicProgressLog[key] || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+      const recent = rows.slice(-3);
+      if (recent.length < 3) return;
+
+      const target = Number(h.targetValue || 1) || 1;
+      const avg = recent.reduce((sum, r) => sum + (Number(r.value || 0) || 0), 0) / recent.length;
+      const allUnder = recent.every(r => (Number(r.value || 0) || 0) < target);
+      const allOver = recent.every(r => (Number(r.value || 0) || 0) > target);
+
+      if (allUnder && avg < target * 0.85) {
+        const suggested = roundGoalSuggestion((avg + target) / 2);
+        if (suggested > 0 && suggested < target) {
+          suggestions.push({
+            title: 'Target Tuning',
+            habitIndex: habitIndex,
+            suggestedTarget: suggested,
+            text: '<strong>' + h.text + '</strong>: over the last 3 days you\'re averaging ' + Math.round(avg) + (h.unit ? ' ' + h.unit : '') + '. Consider setting a goal around <strong>' + suggested + (h.unit ? ' ' + h.unit : '') + '</strong> for steadier wins.'
+          });
+        }
+      } else if (allOver && avg > target * 1.15) {
+        const suggested = roundGoalSuggestion((avg + target) / 2);
+        if (suggested > target) {
+          suggestions.push({
+            title: 'Level Up',
+            habitIndex: habitIndex,
+            suggestedTarget: suggested,
+            text: '<strong>' + h.text + '</strong>: you\'ve beaten your target for 3 straight days (avg ' + Math.round(avg) + (h.unit ? ' ' + h.unit : '') + '). Try raising it to <strong>' + suggested + (h.unit ? ' ' + h.unit : '') + '</strong>.'
+          });
+        }
+      }
+    });
+
+    return suggestions;
+  }
+
+  function applySuggestedTarget(habitIndex, newTarget) {
+    const idx = Number(habitIndex);
+    const target = Number(newTarget);
+    if (Number.isNaN(idx) || Number.isNaN(target) || !habits[idx]) return;
+    habits[idx].targetValue = target;
+    habits[idx].target = target;
+    habits[idx].completed = (Number(habits[idx].currentValue || 0) >= target);
+    habits[idx].lastUpdated = new Date().toISOString();
+    saveHabits();
+    renderAll();
+    renderHeatmap();
+    showToast('🎯 Updated "' + habits[idx].text + '" target to ' + target + (habits[idx].unit ? ' ' + habits[idx].unit : ''));
+  }
 
   async function generateInsights() {
     const list = document.getElementById('insightsList');
@@ -1127,11 +1267,29 @@
       if (aiText) {
         const aiCard = document.createElement('div');
         aiCard.className = 'insight-card';
-        aiCard.innerHTML = `<div class="insight-quote">🤖 AI Coach</div>${aiText}`;
+        aiCard.innerHTML = `<div class="insight-quote">ðŸ¤– AI Coach</div>${aiText}`;
         aiCard.style.cssText = 'opacity:0;transform:translateY(6px);transition:opacity 0.3s ease,transform 0.3s ease;';
         list.appendChild(aiCard);
         setTimeout(() => { aiCard.style.opacity='1'; aiCard.style.transform='translateY(0)'; }, 50);
       }
+
+      const targetSuggestions = generateTargetGoalSuggestions();
+      targetSuggestions.slice(0, 2).forEach((s, idx) => {
+        const sCard = document.createElement('div');
+        sCard.className = 'insight-card';
+        sCard.innerHTML = '<div class="insight-quote">' + s.title + '</div>' + s.text;
+        if (typeof s.habitIndex === 'number' && s.suggestedTarget) {
+          const btn = document.createElement('button');
+          btn.className = 'btn-primary';
+          btn.style.marginTop = '10px';
+          btn.textContent = 'Apply this target';
+          btn.onclick = () => applySuggestedTarget(s.habitIndex, s.suggestedTarget);
+          sCard.appendChild(btn);
+        }
+        sCard.style.cssText = 'opacity:0;transform:translateY(6px);transition:opacity 0.3s ease,transform 0.3s ease;';
+        list.appendChild(sCard);
+        setTimeout(() => { sCard.style.opacity='1'; sCard.style.transform='translateY(0)'; }, (idx + 1) * 90);
+      });
 
       // Fill remaining cards with local insights
       const remaining = [...insightFns].sort(() => Math.random() - 0.5).slice(0, aiText ? 2 : 3);
@@ -1161,7 +1319,7 @@
     }
   }
 
-  // ─── TOAST ───────────────────────────────────
+  // â”€â”€â”€ TOAST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   let toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
@@ -1171,7 +1329,7 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
   }
 
-  // ─── PER-HABIT AI PANEL ──────────────────────
+  // â”€â”€â”€ PER-HABIT AI PANEL â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function buildAIPanelHTML(i) {
     const h = habits[i];
     const isStatic = h.type === 'static';
@@ -1192,12 +1350,12 @@
     return `
       <div class="ai-panel-inner">
         <div class="ai-panel-header">
-          <span class="ai-panel-title">✦ Ask AI about this habit</span>
+          <span class="ai-panel-title">âœ¦ Ask AI about this habit</span>
         </div>
         <div class="ai-presets">${chips}</div>
         <div class="ai-input-row">
-          <input class="ai-input" id="ai-input-${i}" placeholder="Ask anything about this habit…">
-          <button class="ai-send-btn" id="ai-send-${i}" onclick="submitHabitAI(${i})">Ask →</button>
+          <input class="ai-input" id="ai-input-${i}" placeholder="Ask anything about this habitâ€¦">
+          <button class="ai-send-btn" id="ai-send-${i}" onclick="submitHabitAI(${i})">Ask â†’</button>
         </div>
         <div class="ai-response" id="ai-response-${i}">
           <div class="ai-response-inner"></div>
@@ -1241,14 +1399,14 @@
 
     // Show loading state
     sendBtn.disabled = true;
-    sendBtn.textContent = '…';
+    sendBtn.textContent = 'â€¦';
     respDiv.classList.add('visible');
     respDiv.querySelector('.ai-response-inner').innerHTML =
       `<div class="loading">
         <span class="typing-dot"></span>
         <span class="typing-dot"></span>
         <span class="typing-dot"></span>
-        <span style="margin-left:6px;font-size:12px;">Thinking…</span>
+        <span style="margin-left:6px;font-size:12px;">Thinkingâ€¦</span>
       </div>`;
 
     try {
@@ -1266,7 +1424,7 @@
     }
 
     sendBtn.disabled = false;
-    sendBtn.textContent = 'Ask →';
+    sendBtn.textContent = 'Ask â†’';
   }
 
   // Enter key in AI input
@@ -1277,15 +1435,15 @@
     }
   });
 
-  // ─── WEEKLY REVIEW ───────────────────────────
+  // â”€â”€â”€ WEEKLY REVIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   async function loadWeeklyReview() {
-    // Only show on Mondays or if forced — great for demos just always show if habits exist
+    // Only show on Mondays or if forced â€” great for demos just always show if habits exist
     if (!habits.length) return;
     const card = document.getElementById('weeklyReviewCard');
     const text = document.getElementById('weeklyReviewText');
     card.style.display = 'block';
 
-    // Check cache — only re-fetch once per day
+    // Check cache â€” only re-fetch once per day
     const cacheKey = 'nh_weekly_review';
     const cacheDate = localStorage.getItem('nh_weekly_review_date');
     if (cacheDate === todayKey()) {
@@ -1306,12 +1464,12 @@
       localStorage.setItem(cacheKey, review);
       localStorage.setItem('nh_weekly_review_date', todayKey());
     } catch(_) {
-      text.textContent = 'Weekly review unavailable — check your connection.';
+      text.textContent = 'Weekly review unavailable â€” check your connection.';
       text.classList.remove('loading');
     }
   }
 
-  // ─── SMART NUDGE ─────────────────────────────
+  // â”€â”€â”€ SMART NUDGE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   function checkSmartNudge() {
     if (!habits.length) return;
     const hour = new Date().getHours();
@@ -1337,7 +1495,7 @@
     localStorage.setItem('nh_nudge_dismissed', todayKey());
   }
 
-  // ─── BOOT AI FEATURES ────────────────────────
+  // â”€â”€â”€ BOOT AI FEATURES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   document.addEventListener('DOMContentLoaded', () => {
     setTimeout(loadWeeklyReview, 800);
     setTimeout(checkSmartNudge, 1200);
@@ -1345,4 +1503,10 @@
   </script>
 </body>
 </html>
+
+
+
+
+
+
 

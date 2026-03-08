@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,53 +11,87 @@
 
 <div class="auth-wrapper">
   <div class="auth-card">
-    <h2>Email Verification Login</h2>
-    <input id="emailInput" type="email" placeholder="Email" autocomplete="email">
-    <button onclick="sendCode()">Send Verification Code</button>
+    <h2>NeuroHabit Account</h2>
 
-    <input id="codeInput" type="text" placeholder="Enter 6-digit code" maxlength="6" style="margin-top:12px;">
-    <button onclick="verifyCode()">Verify & Continue</button>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button id="signupTab" type="button" onclick="showSignup()" style="flex:1;">Create Account</button>
+      <button id="signinTab" type="button" onclick="showSignin()" style="flex:1;">Sign In</button>
+    </div>
+
+    <div id="signupSection">
+      <input id="signupUsername" type="text" placeholder="Username" autocomplete="nickname" maxlength="32">
+      <input id="signupEmail" type="email" placeholder="Email" autocomplete="email">
+      <input id="signupPassword" type="password" placeholder="Password (min 8 chars)" autocomplete="new-password">
+      <button onclick="registerAccount()">Create Account & Send Code</button>
+
+      <div id="verifySection" style="display:none; margin-top:12px;">
+        <input id="codeInput" type="text" placeholder="Enter 6-digit code" maxlength="6">
+        <button onclick="verifySignupCode()">Verify Email</button>
+      </div>
+    </div>
+
+    <div id="signinSection" style="display:none;">
+      <input id="signinEmail" type="email" placeholder="Email" autocomplete="email">
+      <input id="signinPassword" type="password" placeholder="Password" autocomplete="current-password">
+      <button onclick="signIn()">Sign In</button>
+    </div>
 
     <p id="statusMsg" style="margin-top:12px;color:#9a9a9a;font-size:13px;"></p>
   </div>
 </div>
 
 <script>
-async function sendCode() {
-  const email = document.getElementById('emailInput').value.trim();
+let pendingEmail = "";
+
+function showSignup() {
+  document.getElementById('signupSection').style.display = 'block';
+  document.getElementById('signinSection').style.display = 'none';
+}
+
+function showSignin() {
+  document.getElementById('signupSection').style.display = 'none';
+  document.getElementById('signinSection').style.display = 'block';
+}
+
+async function registerAccount() {
+  const username = document.getElementById('signupUsername').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
   const status = document.getElementById('statusMsg');
 
-  if (!email) {
-    status.textContent = 'Please enter your email.';
+  if (!username || !email || !password) {
+    status.textContent = 'Enter username, email, and password.';
     return;
   }
 
-  status.textContent = 'Sending code...';
+  status.textContent = 'Creating account and sending code...';
 
   try {
-    const res = await fetch('/api/auth/send-code', {
+    const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ username, email, password })
     });
     const data = await res.json();
     if (!res.ok) {
-      status.textContent = data.error || 'Could not send code.';
+      status.textContent = data.error || 'Could not create account.';
       return;
     }
-    status.textContent = 'Verification code sent. Check your inbox.';
+
+    pendingEmail = email;
+    document.getElementById('verifySection').style.display = 'block';
+    status.textContent = 'Code sent successfully. Enter it below to verify your email.';
   } catch (err) {
     status.textContent = 'Network error while sending code.';
   }
 }
 
-async function verifyCode() {
-  const email = document.getElementById('emailInput').value.trim();
+async function verifySignupCode() {
   const code = document.getElementById('codeInput').value.trim();
   const status = document.getElementById('statusMsg');
 
-  if (!email || !code) {
-    status.textContent = 'Enter both email and code.';
+  if (!pendingEmail || !code) {
+    status.textContent = 'Enter the verification code sent to your email.';
     return;
   }
 
@@ -67,20 +101,54 @@ async function verifyCode() {
     const res = await fetch('/api/auth/verify-code', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, code })
+      body: JSON.stringify({ email: pendingEmail, code })
     });
     const data = await res.json();
     if (!res.ok) {
       status.textContent = data.error || 'Verification failed.';
       return;
     }
+
     status.textContent = 'Verified. Redirecting...';
     window.location.href = 'dashboard.html';
   } catch (err) {
     status.textContent = 'Network error while verifying.';
   }
 }
+
+async function signIn() {
+  const email = document.getElementById('signinEmail').value.trim();
+  const password = document.getElementById('signinPassword').value;
+  const status = document.getElementById('statusMsg');
+
+  if (!email || !password) {
+    status.textContent = 'Enter both email and password.';
+    return;
+  }
+
+  status.textContent = 'Signing in...';
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || 'Sign in failed.';
+      return;
+    }
+
+    status.textContent = 'Signed in. Redirecting...';
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    status.textContent = 'Network error while signing in.';
+  }
+}
 </script>
 
 </body>
 </html>
+
+
