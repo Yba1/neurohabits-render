@@ -282,6 +282,7 @@ def _normalize_habit(raw: dict[str, Any]) -> dict[str, Any] | None:
         "value": current_value,
         "currentValue": current_value,
         "timeWindow": time_window,
+        "category": str(raw.get("category", "General") or "General"),
         "created": raw.get("created") or datetime.utcnow().isoformat() + "Z",
         "lastUpdated": raw.get("lastUpdated") or datetime.utcnow().isoformat() + "Z",
         "streak": int(raw.get("streak", 0) or 0),
@@ -717,6 +718,88 @@ def get_weekly_review() -> Any:
         return jsonify({"review": "Couldn't load weekly review right now."})
 
 
+
+def _heuristic_category(habit_name: str) -> str:
+    t = habit_name.lower()
+    if any(k in t for k in ["read", "study", "homework", "learn", "flashcard", "class"]):
+        return "Study"
+    if any(k in t for k in ["gym", "run", "workout", "exercise", "walk", "steps", "protein", "sleep"]):
+        return "Health"
+    if any(k in t for k in ["code", "project", "build", "debug", "ship"]):
+        return "Build"
+    if any(k in t for k in ["journal", "meditate", "mind", "reflect"]):
+        return "Mindset"
+    return "General"
+
+
+def _category_suggestions(habits: list[dict[str, Any]], existing: list[str] | None = None) -> dict[str, Any]:
+    names = [str(h.get("text") or h.get("name") or "").strip() for h in habits]
+    names = [n for n in names if n]
+    if not names:
+        return {"categories": existing or ["General"], "assignments": []}
+
+    api_key = os.getenv("FEATHERLESS_API_KEY")
+    model_id = os.getenv("FEATHERLESS_MODEL", "deepseek-ai/DeepSeek-V3-0324")
+
+    if api_key and len(names) >= 5:
+        prompt = (
+            "Group these habits into practical categories. "
+            "Return ONLY valid JSON with this schema: "
+            "{\"categories\":[\"Study\"],\"assignments\":[{\"habit\":\"Read 20 pages\",\"category\":\"Study\"}]}. "
+            "Use short category names and assign every habit exactly once.\n\n"
+            f"Habits: {json.dumps(names)}\n"
+            f"Existing categories: {json.dumps(existing or [])}"
+        )
+        try:
+            response = requests.post(
+                FEATHERLESS_URL,
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model_id,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "temperature": 0.2,
+                },
+                timeout=25,
+            )
+            response.raise_for_status()
+            content = response.json()["choices"][0]["message"]["content"]
+            parsed = json.loads(content)
+            categories = [str(c).strip() for c in parsed.get("categories", []) if str(c).strip()]
+            assignments = []
+            for a in parsed.get("assignments", []):
+                habit = str(a.get("habit", "")).strip()
+                category = str(a.get("category", "")).strip()
+                if habit and category:
+                    assignments.append({"habit": habit, "category": category})
+            if categories and assignments:
+                return {"categories": categories, "assignments": assignments}
+        except Exception:
+            pass
+
+    assignments = [{"habit": n, "category": _heuristic_category(n)} for n in names]
+    categories = sorted({a["category"] for a in assignments} | set(existing or []) | {"General"})
+    return {"categories": categories, "assignments": assignments}
+
+
+@app.post("/api/category-suggestions")
+def api_category_suggestions() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
+
+    payload = request.get_json(silent=True) or {}
+    habits = payload.get("habits", [])
+    existing = payload.get("categories", [])
+    if not isinstance(habits, list):
+        habits = []
+    if not isinstance(existing, list):
+        existing = []
+
+    result = _category_suggestions(habits, existing)
+    return jsonify(result)
 @app.get("/health")
 def health() -> Any:
     return jsonify({"status": "ok"})
@@ -725,6 +808,8 @@ def health() -> Any:
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+
 
 
 
