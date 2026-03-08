@@ -3,25 +3,33 @@ from __future__ import annotations
 import base64
 import json
 import os
-from datetime import datetime
+import random
+import re
+import smtplib
+from datetime import datetime, timedelta
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Any
 
 import requests
-from flask import Flask, jsonify, render_template, request, send_from_directory
+from flask import Flask, jsonify, render_template, request, send_from_directory, session
 
 app = Flask(__name__, template_folder=".", static_folder=".")
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-this-secret")
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = Path(os.getenv("DATA_FILE_PATH", str(BASE_DIR / "data.json")))
 FEATHERLESS_URL = "https://api.featherless.ai/v1/chat/completions"
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def _default_data() -> dict[str, Any]:
     return {
         "habits": [],
         "history": [],
+        "users": {},
+        "verification_codes": {},
         "updated_at": datetime.utcnow().isoformat() + "Z",
     }
 
@@ -35,17 +43,69 @@ def _load_data() -> dict[str, Any]:
         return data
 
     try:
-        return json.loads(DATA_FILE.read_text(encoding="utf-8"))
+        data = json.loads(DATA_FILE.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         data = _default_data()
         _save_data(data)
         return data
+
+    data.setdefault("users", {})
+    data.setdefault("verification_codes", {})
+    return data
 
 
 def _save_data(data: dict[str, Any]) -> None:
     data["updated_at"] = datetime.utcnow().isoformat() + "Z"
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     DATA_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _normalize_email(email: str) -> str:
+    return email.strip().lower()
+
+
+def _current_user_email() -> str | None:
+    email = session.get("user_email")
+    if isinstance(email, str):
+        return _normalize_email(email)
+    return None
+
+
+def _require_auth() -> tuple[str | None, Any | None]:
+    email = _current_user_email()
+    if not email:
+        return None, (jsonify({"error": "Authentication required."}), 401)
+    return email, None
+
+
+def _send_verification_email(email: str, code: str) -> tuple[bool, str]:
+    smtp_host = os.getenv("SMTP_HOST")
+    smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    smtp_user = os.getenv("SMTP_USERNAME")
+    smtp_pass = os.getenv("SMTP_PASSWORD")
+    smtp_from = os.getenv("SMTP_FROM", smtp_user or "")
+
+    if not smtp_host or not smtp_user or not smtp_pass or not smtp_from:
+        return False, "SMTP is not configured on the server."
+
+    msg = EmailMessage()
+    msg["Subject"] = "Your NeuroHabit verification code"
+    msg["From"] = smtp_from
+    msg["To"] = email
+    msg.set_content(
+        f"Your NeuroHabit verification code is: {code}\n\n"
+        "This code expires in 10 minutes."
+    )
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=20) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+    except Exception as exc:  # noqa: BLE001
+        return False, f"Failed to send email: {exc}"
+
+    return True, "Verification code sent."
 
 
 def _generate_insight(data: dict[str, Any]) -> str:
@@ -229,13 +289,97 @@ def index_page() -> Any:
     return send_from_directory(".", "index.html")
 
 
+@app.post("/api/auth/send-code")
+def auth_send_code() -> Any:
+    payload = request.get_json(silent=True) or {}
+    email = _normalize_email(str(payload.get("email", "")))
+    if not EMAIL_REGEX.match(email):
+        return jsonify({"error": "Enter a valid email address."}), 400
+
+    code = f"{random.randint(0, 999999):06d}"
+    expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat() + "Z"
+
+    data = _load_data()
+    data.setdefault("verification_codes", {})
+    data["verification_codes"][email] = {
+        "code": code,
+        "expires_at": expires_at,
+        "attempts": 0,
+    }
+    _save_data(data)
+
+    ok, message = _send_verification_email(email, code)
+    if not ok:
+        return jsonify({"error": message}), 500
+    return jsonify({"message": message})
+
+
+@app.post("/api/auth/verify-code")
+def auth_verify_code() -> Any:
+    payload = request.get_json(silent=True) or {}
+    email = _normalize_email(str(payload.get("email", "")))
+    code = str(payload.get("code", "")).strip()
+    if not EMAIL_REGEX.match(email):
+        return jsonify({"error": "Enter a valid email address."}), 400
+
+    data = _load_data()
+    stored = data.get("verification_codes", {}).get(email)
+    if not stored:
+        return jsonify({"error": "No code found. Request a new one."}), 400
+
+    exp_raw = str(stored.get("expires_at", ""))
+    try:
+        exp = datetime.fromisoformat(exp_raw.replace("Z", ""))
+    except ValueError:
+        exp = None
+
+    if not exp or datetime.utcnow() > exp:
+        data["verification_codes"].pop(email, None)
+        _save_data(data)
+        return jsonify({"error": "Verification code expired. Request a new code."}), 400
+
+    if code != str(stored.get("code", "")):
+        stored["attempts"] = int(stored.get("attempts", 0)) + 1
+        _save_data(data)
+        return jsonify({"error": "Invalid verification code."}), 400
+
+    data["verification_codes"].pop(email, None)
+    data.setdefault("users", {})
+    data["users"][email] = {"email": email, "verified": True}
+    _save_data(data)
+
+    session["user_email"] = email
+    return jsonify({"message": "Login successful.", "email": email})
+
+
+@app.get("/api/auth/me")
+def auth_me() -> Any:
+    email = _current_user_email()
+    if not email:
+        return jsonify({"authenticated": False}), 401
+    return jsonify({"authenticated": True, "email": email})
+
+
+@app.post("/api/auth/logout")
+def auth_logout() -> Any:
+    session.pop("user_email", None)
+    return jsonify({"message": "Logged out."})
+
+
 @app.get("/api/habits")
 def get_habits() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
     return jsonify(_load_data())
 
 
 @app.post("/api/habits")
 def save_habits() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
+
     payload = request.get_json(silent=True) or {}
     habits = payload.get("habits")
     if not isinstance(habits, list):
@@ -253,6 +397,10 @@ def save_habits() -> Any:
 
 @app.post("/save_habits")
 def save_habits_compat() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
+
     payload = request.get_json(silent=True)
     if isinstance(payload, list):
         habits = payload
@@ -274,24 +422,37 @@ def save_habits_compat() -> Any:
 
 @app.get("/get_habits")
 def get_habits_compat() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
     data = _load_data()
     return jsonify({"habits": data.get("habits", []), "history": data.get("history", [])})
 
 
 @app.get("/api/insight")
 def get_insight() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
     data = _load_data()
     return jsonify({"insight": _generate_insight(data)})
 
 
 @app.post("/api/ai-insight")
 def get_ai_insight() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
     data = _load_data()
     return jsonify({"insight": _generate_ai_insight(data)})
 
 
 @app.post("/api/voice-insight")
 def get_voice_insight() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
+
     payload = request.get_json(silent=True) or {}
     text = str(payload.get("text", "")).strip()
     if not text:
@@ -315,6 +476,10 @@ def get_voice_insight() -> Any:
 
 @app.post("/api/habit-insight")
 def get_habit_insight() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
+
     payload = request.get_json(silent=True) or {}
     habit = payload.get("habit", {})
     question = str(payload.get("question", "")).strip()
@@ -363,6 +528,10 @@ def get_habit_insight() -> Any:
 
 @app.post("/api/weekly-review")
 def get_weekly_review() -> Any:
+    _, auth_error = _require_auth()
+    if auth_error:
+        return auth_error
+
     payload = request.get_json(silent=True) or {}
     habits = payload.get("habits", [])
     history = payload.get("history", {})

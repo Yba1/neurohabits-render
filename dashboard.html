@@ -477,6 +477,20 @@
   </style>
 </head>
 <body>
+<script>
+(function () {
+  fetch('/api/auth/me')
+    .then(function (res) {
+      if (!res.ok) {
+        window.location.href = 'login.html';
+      }
+    })
+    .catch(function () {
+      window.location.href = 'login.html';
+    });
+})();
+</script>
+
 
   <!-- SVG gradient defs for radial ring -->
   <svg width="0" height="0" style="position:absolute">
@@ -1329,3 +1343,4 @@
   </script>
 </body>
 </html>
+
