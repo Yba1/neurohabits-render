@@ -27,10 +27,9 @@ EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 def _default_data() -> dict[str, Any]:
     return {
-        "habits": [],
-        "history": [],
         "users": {},
         "verification_codes": {},
+        "habits_by_user": {},
         "updated_at": datetime.utcnow().isoformat() + "Z",
     }
 
@@ -50,8 +49,27 @@ def _load_data() -> dict[str, Any]:
         _save_data(data)
         return data
 
+    # Migration from older global habits/history schema.
+    if "habits_by_user" not in data:
+        migrated = _default_data()
+        migrated["users"] = data.get("users", {})
+        migrated["verification_codes"] = data.get("verification_codes", {})
+
+        old_habits = data.get("habits", [])
+        old_history = data.get("history", [])
+        if old_habits or old_history:
+            migrated["habits_by_user"]["legacy@local"] = {
+                "habits": old_habits,
+                "history": old_history,
+                "updated_at": datetime.utcnow().isoformat() + "Z",
+            }
+
+        data = migrated
+        _save_data(data)
+
     data.setdefault("users", {})
     data.setdefault("verification_codes", {})
+    data.setdefault("habits_by_user", {})
     return data
 
 
@@ -86,6 +104,29 @@ def _require_auth() -> tuple[str | None, Any | None]:
     return email, None
 
 
+def _get_user_bucket(data: dict[str, Any], email: str) -> dict[str, Any]:
+    bucket = data["habits_by_user"].get(email)
+    if not bucket:
+        bucket = {
+            "habits": [],
+            "history": [],
+            "updated_at": datetime.utcnow().isoformat() + "Z",
+        }
+        data["habits_by_user"][email] = bucket
+
+    bucket.setdefault("habits", [])
+    bucket.setdefault("history", [])
+    return bucket
+
+
+def _get_user_data(email: str) -> dict[str, Any]:
+    data = _load_data()
+    bucket = _get_user_bucket(data, email)
+    # Persist in case bucket was created.
+    _save_data(data)
+    return bucket
+
+
 def _send_verification_email(email: str, code: str) -> tuple[bool, str]:
     smtp_host = os.getenv("SMTP_HOST")
     smtp_port = int(os.getenv("SMTP_PORT", "587"))
@@ -116,8 +157,8 @@ def _send_verification_email(email: str, code: str) -> tuple[bool, str]:
     return True, "Verification code sent."
 
 
-def _generate_insight(data: dict[str, Any]) -> str:
-    habits = data.get("habits", [])
+def _generate_insight(user_data: dict[str, Any]) -> str:
+    habits = user_data.get("habits", [])
     if not habits:
         return "Start by adding 2-3 habits you can realistically do daily."
 
@@ -150,14 +191,14 @@ def _build_habit_summary(habits: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
-def _generate_ai_insight(data: dict[str, Any]) -> str:
+def _generate_ai_insight(user_data: dict[str, Any]) -> str:
     api_key = os.getenv("FEATHERLESS_API_KEY")
     model_id = os.getenv("FEATHERLESS_MODEL", "deepseek-ai/DeepSeek-V3-0324")
     if not api_key:
-        return _generate_insight(data)
+        return _generate_insight(user_data)
 
-    habits = data.get("habits", [])
-    history = data.get("history", [])[-7:]
+    habits = user_data.get("habits", [])
+    history = user_data.get("history", [])[-7:]
     habit_summary = _build_habit_summary(habits)
     history_summary = json.dumps(history)
 
@@ -186,9 +227,9 @@ def _generate_ai_insight(data: dict[str, Any]) -> str:
         response.raise_for_status()
         payload = response.json()
         content = payload["choices"][0]["message"]["content"].strip()
-        return content or _generate_insight(data)
+        return content or _generate_insight(user_data)
     except (requests.RequestException, KeyError, IndexError, ValueError):
-        return _generate_insight(data)
+        return _generate_insight(user_data)
 
 
 def _text_to_speech(text: str) -> str | None:
@@ -240,7 +281,7 @@ def _normalize_habit(raw: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
-def _save_habits_list(incoming_habits: list[Any]) -> dict[str, Any]:
+def _save_habits_list(email: str, incoming_habits: list[Any]) -> dict[str, Any]:
     normalized_habits: list[dict[str, Any]] = []
     for raw in incoming_habits:
         if not isinstance(raw, dict):
@@ -250,16 +291,19 @@ def _save_habits_list(incoming_habits: list[Any]) -> dict[str, Any]:
             normalized_habits.append(normalized)
 
     data = _load_data()
-    data["habits"] = normalized_habits
-    data.setdefault("history", []).append(
+    bucket = _get_user_bucket(data, email)
+    bucket["habits"] = normalized_habits
+    bucket.setdefault("history", []).append(
         {
             "timestamp": datetime.utcnow().isoformat() + "Z",
             "completed": sum(1 for h in normalized_habits if h["done"]),
             "total": len(normalized_habits),
         }
     )
+    bucket["updated_at"] = datetime.utcnow().isoformat() + "Z"
+
     _save_data(data)
-    return data
+    return bucket
 
 
 @app.get("/")
@@ -313,12 +357,19 @@ def auth_register() -> Any:
     if existing and existing.get("verified"):
         return jsonify({"error": "Account already exists. Please sign in."}), 400
 
+    created_at = datetime.utcnow().isoformat() + "Z"
+    if isinstance(existing, dict) and existing.get("created_at"):
+        created_at = existing["created_at"]
+
     data["users"][email] = {
         "email": email,
         "password_hash": generate_password_hash(password),
         "verified": False,
-        "created_at": existing.get("created_at") if isinstance(existing, dict) else datetime.utcnow().isoformat() + "Z",
+        "created_at": created_at,
     }
+
+    # Ensure habit bucket exists so synced data always has a home.
+    _get_user_bucket(data, email)
 
     code = f"{random.randint(0, 999999):06d}"
     expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat() + "Z"
@@ -440,15 +491,15 @@ def auth_logout() -> Any:
 
 @app.get("/api/habits")
 def get_habits() -> Any:
-    _, auth_error = _require_auth()
+    email, auth_error = _require_auth()
     if auth_error:
         return auth_error
-    return jsonify(_load_data())
+    return jsonify(_get_user_data(email))
 
 
 @app.post("/api/habits")
 def save_habits() -> Any:
-    _, auth_error = _require_auth()
+    email, auth_error = _require_auth()
     if auth_error:
         return auth_error
 
@@ -457,19 +508,19 @@ def save_habits() -> Any:
     if not isinstance(habits, list):
         return jsonify({"error": "Expected 'habits' to be a list."}), 400
 
-    data = _save_habits_list(habits)
+    user_data = _save_habits_list(email, habits)
     return jsonify(
         {
             "message": "Habits saved successfully.",
-            "insight": _generate_insight(data),
-            "data": data,
+            "insight": _generate_insight(user_data),
+            "data": user_data,
         }
     )
 
 
 @app.post("/save_habits")
 def save_habits_compat() -> Any:
-    _, auth_error = _require_auth()
+    email, auth_error = _require_auth()
     if auth_error:
         return auth_error
 
@@ -482,54 +533,57 @@ def save_habits_compat() -> Any:
     if not isinstance(habits, list):
         return jsonify({"error": "Expected a habits list."}), 400
 
-    data = _save_habits_list(habits)
+    user_data = _save_habits_list(email, habits)
     return jsonify(
         {
             "message": "Habits saved!",
-            "insight": _generate_insight(data),
-            "habits": data["habits"],
+            "insight": _generate_insight(user_data),
+            "habits": user_data["habits"],
         }
     )
 
 
 @app.get("/get_habits")
 def get_habits_compat() -> Any:
-    _, auth_error = _require_auth()
+    email, auth_error = _require_auth()
     if auth_error:
         return auth_error
-    data = _load_data()
-    return jsonify({"habits": data.get("habits", []), "history": data.get("history", [])})
+    user_data = _get_user_data(email)
+    return jsonify({
+        "habits": user_data.get("habits", []),
+        "history": user_data.get("history", []),
+    })
 
 
 @app.get("/api/insight")
 def get_insight() -> Any:
-    _, auth_error = _require_auth()
+    email, auth_error = _require_auth()
     if auth_error:
         return auth_error
-    data = _load_data()
-    return jsonify({"insight": _generate_insight(data)})
+    user_data = _get_user_data(email)
+    return jsonify({"insight": _generate_insight(user_data)})
 
 
 @app.post("/api/ai-insight")
 def get_ai_insight() -> Any:
-    _, auth_error = _require_auth()
+    email, auth_error = _require_auth()
     if auth_error:
         return auth_error
-    data = _load_data()
-    return jsonify({"insight": _generate_ai_insight(data)})
+    user_data = _get_user_data(email)
+    return jsonify({"insight": _generate_ai_insight(user_data)})
 
 
 @app.post("/api/voice-insight")
 def get_voice_insight() -> Any:
-    _, auth_error = _require_auth()
+    email, auth_error = _require_auth()
     if auth_error:
         return auth_error
 
     payload = request.get_json(silent=True) or {}
     text = str(payload.get("text", "")).strip()
     if not text:
-        data = _load_data()
-        text = _generate_ai_insight(data)
+        user_data = _get_user_data(email)
+        text = _generate_ai_insight(user_data)
 
     audio_data_url = _text_to_speech(text)
     if not audio_data_url:
