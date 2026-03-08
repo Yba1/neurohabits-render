@@ -1,32 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login | NeuroHabit</title>
 <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<!-- Glowing background orb -->
 <div class="glow"></div>
 
 <div class="auth-wrapper">
   <div class="auth-card">
-    <h2>Sign In</h2>
-    <input type="text" placeholder="Email">
-    <input type="password" placeholder="Password">
-    <button onclick="login()">Continue</button>
+    <h2>Email Verification Login</h2>
+    <input id="emailInput" type="email" placeholder="Email" autocomplete="email">
+    <button onclick="sendCode()">Send Verification Code</button>
+
+    <input id="codeInput" type="text" placeholder="Enter 6-digit code" maxlength="6" style="margin-top:12px;">
+    <button onclick="verifyCode()">Verify & Continue</button>
+
+    <p id="statusMsg" style="margin-top:12px;color:#9a9a9a;font-size:13px;"></p>
   </div>
 </div>
 
 <script>
-  function login() {
-    // Fake login for now
-    window.location.href = "dashboard.html";
+async function sendCode() {
+  const email = document.getElementById('emailInput').value.trim();
+  const status = document.getElementById('statusMsg');
+
+  if (!email) {
+    status.textContent = 'Please enter your email.';
+    return;
   }
+
+  status.textContent = 'Sending code...';
+
+  try {
+    const res = await fetch('/api/auth/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || 'Could not send code.';
+      return;
+    }
+    status.textContent = 'Verification code sent. Check your inbox.';
+  } catch (err) {
+    status.textContent = 'Network error while sending code.';
+  }
+}
+
+async function verifyCode() {
+  const email = document.getElementById('emailInput').value.trim();
+  const code = document.getElementById('codeInput').value.trim();
+  const status = document.getElementById('statusMsg');
+
+  if (!email || !code) {
+    status.textContent = 'Enter both email and code.';
+    return;
+  }
+
+  status.textContent = 'Verifying...';
+
+  try {
+    const res = await fetch('/api/auth/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || 'Verification failed.';
+      return;
+    }
+    status.textContent = 'Verified. Redirecting...';
+    window.location.href = 'dashboard.html';
+  } catch (err) {
+    status.textContent = 'Network error while verifying.';
+  }
+}
 </script>
 
 </body>

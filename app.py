@@ -13,6 +13,7 @@ from typing import Any
 
 import requests
 from flask import Flask, jsonify, render_template, request, send_from_directory, session
+from werkzeug.security import check_password_hash, generate_password_hash
 
 app = Flask(__name__, template_folder=".", static_folder=".")
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "change-this-secret")
@@ -58,6 +59,13 @@ def _save_data(data: dict[str, Any]) -> None:
     data["updated_at"] = datetime.utcnow().isoformat() + "Z"
     DATA_FILE.parent.mkdir(parents=True, exist_ok=True)
     DATA_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+
+
+def _parse_iso(value: str) -> datetime | None:
+    try:
+        return datetime.fromisoformat(value.replace("Z", ""))
+    except ValueError:
+        return None
 
 
 def _normalize_email(email: str) -> str:
@@ -289,21 +297,63 @@ def index_page() -> Any:
     return send_from_directory(".", "index.html")
 
 
+@app.post("/api/auth/register")
+def auth_register() -> Any:
+    payload = request.get_json(silent=True) or {}
+    email = _normalize_email(str(payload.get("email", "")))
+    password = str(payload.get("password", ""))
+
+    if not EMAIL_REGEX.match(email):
+        return jsonify({"error": "Enter a valid email address."}), 400
+    if len(password) < 8:
+        return jsonify({"error": "Password must be at least 8 characters."}), 400
+
+    data = _load_data()
+    existing = data.setdefault("users", {}).get(email)
+    if existing and existing.get("verified"):
+        return jsonify({"error": "Account already exists. Please sign in."}), 400
+
+    data["users"][email] = {
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "verified": False,
+        "created_at": existing.get("created_at") if isinstance(existing, dict) else datetime.utcnow().isoformat() + "Z",
+    }
+
+    code = f"{random.randint(0, 999999):06d}"
+    expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat() + "Z"
+    data.setdefault("verification_codes", {})[email] = {
+        "code": code,
+        "expires_at": expires_at,
+        "purpose": "signup",
+        "attempts": 0,
+    }
+    _save_data(data)
+
+    ok, message = _send_verification_email(email, code)
+    if not ok:
+        return jsonify({"error": message}), 500
+
+    return jsonify({"message": message})
+
+
 @app.post("/api/auth/send-code")
-def auth_send_code() -> Any:
+def auth_send_code_compat() -> Any:
     payload = request.get_json(silent=True) or {}
     email = _normalize_email(str(payload.get("email", "")))
     if not EMAIL_REGEX.match(email):
         return jsonify({"error": "Enter a valid email address."}), 400
 
+    data = _load_data()
+    if email not in data.get("users", {}):
+        return jsonify({"error": "No account found. Please sign up first."}), 400
+
     code = f"{random.randint(0, 999999):06d}"
     expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat() + "Z"
-
-    data = _load_data()
-    data.setdefault("verification_codes", {})
-    data["verification_codes"][email] = {
+    data.setdefault("verification_codes", {})[email] = {
         "code": code,
         "expires_at": expires_at,
+        "purpose": "signup",
         "attempts": 0,
     }
     _save_data(data)
@@ -319,6 +369,7 @@ def auth_verify_code() -> Any:
     payload = request.get_json(silent=True) or {}
     email = _normalize_email(str(payload.get("email", "")))
     code = str(payload.get("code", "")).strip()
+
     if not EMAIL_REGEX.match(email):
         return jsonify({"error": "Enter a valid email address."}), 400
 
@@ -327,12 +378,7 @@ def auth_verify_code() -> Any:
     if not stored:
         return jsonify({"error": "No code found. Request a new one."}), 400
 
-    exp_raw = str(stored.get("expires_at", ""))
-    try:
-        exp = datetime.fromisoformat(exp_raw.replace("Z", ""))
-    except ValueError:
-        exp = None
-
+    exp = _parse_iso(str(stored.get("expires_at", "")))
     if not exp or datetime.utcnow() > exp:
         data["verification_codes"].pop(email, None)
         _save_data(data)
@@ -343,10 +389,36 @@ def auth_verify_code() -> Any:
         _save_data(data)
         return jsonify({"error": "Invalid verification code."}), 400
 
+    user = data.setdefault("users", {}).get(email)
+    if not user:
+        return jsonify({"error": "Account not found. Please sign up again."}), 400
+
+    user["verified"] = True
     data["verification_codes"].pop(email, None)
-    data.setdefault("users", {})
-    data["users"][email] = {"email": email, "verified": True}
     _save_data(data)
+
+    session["user_email"] = email
+    return jsonify({"message": "Email verified. Logged in.", "email": email})
+
+
+@app.post("/api/auth/login")
+def auth_login() -> Any:
+    payload = request.get_json(silent=True) or {}
+    email = _normalize_email(str(payload.get("email", "")))
+    password = str(payload.get("password", ""))
+
+    if not EMAIL_REGEX.match(email):
+        return jsonify({"error": "Enter a valid email address."}), 400
+
+    data = _load_data()
+    user = data.get("users", {}).get(email)
+    if not user:
+        return jsonify({"error": "Account not found. Please sign up."}), 400
+    if not user.get("verified"):
+        return jsonify({"error": "Please verify your email first."}), 400
+
+    if not check_password_hash(str(user.get("password_hash", "")), password):
+        return jsonify({"error": "Invalid email or password."}), 401
 
     session["user_email"] = email
     return jsonify({"message": "Login successful.", "email": email})
