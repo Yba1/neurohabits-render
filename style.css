@@ -12,7 +12,7 @@ body {
   overflow-x: hidden;
 }
 
-/* ===================== GLOW BACKGROUND ===================== */
+/*Glowing Gackground*/
 
 .glow {
   position: fixed;
@@ -35,7 +35,7 @@ body {
   opacity: 0.15;
 }
 
-/* ===================== HEADER ===================== */
+/*Header*/
 
 header {
   display: flex;
@@ -74,7 +74,7 @@ nav a:hover {
   color: white;
 }
 
-/* ===================== HERO ===================== */
+/*Hero Component*/
 
 .hero {
   text-align: center;
@@ -119,7 +119,7 @@ nav a:hover {
   margin: 0 auto;
 }
 
-/* ===================== CTA BUTTON ===================== */
+/*CTA Button*/
 
 .cta {
   margin-top: 36px;
@@ -141,7 +141,7 @@ nav a:hover {
   box-shadow: 0 10px 30px rgba(108, 99, 255, 0.4);
 }
 
-/* ===================== FEATURES ===================== */
+/*Featers*/
 
 .features {
   display: flex;
@@ -188,7 +188,7 @@ nav a:hover {
   line-height: 1.6;
 }
 
-/* ===================== SHARED SECTION STYLES ===================== */
+/*Shared Selection Styles*/
 
 .section-tag {
   display: inline-block;
@@ -225,7 +225,7 @@ nav a:hover {
   margin-bottom: 56px;
 }
 
-/* ===================== ABOUT SECTION ===================== */
+/*About Section*/
 
 .about-section {
   margin-top: 160px;
@@ -303,7 +303,7 @@ nav a:hover {
   text-transform: uppercase;
 }
 
-/* ===================== SOLUTION SECTION ===================== */
+/*Solution Section*/
 
 .solution-section {
   margin-top: 160px;
@@ -390,7 +390,7 @@ nav a:hover {
   font-weight: 500;
 }
 
-/* ===================== CREATORS SECTION ===================== */
+/*Creaters*/
 
 .creators-section {
   margin-top: 160px;
@@ -463,7 +463,7 @@ nav a:hover {
   line-height: 1.65;
 }
 
-/* ===================== CTA BANNER ===================== */
+/*CTA Baner*/
 
 .cta-banner {
   margin-top: 160px;
@@ -486,7 +486,7 @@ nav a:hover {
   margin-bottom: 4px;
 }
 
-/* ===================== FOOTER ===================== */
+/*Footer*/
 
 footer {
   margin-top: 0;
