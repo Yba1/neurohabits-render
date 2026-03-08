@@ -1,0 +1,154 @@
+{
+  "habits": [
+    {
+      "name": "unc",
+      "text": "unc",
+      "done": false,
+      "completed": false,
+      "type": "static",
+      "target": null,
+      "unit": null,
+      "value": null,
+      "created": "2026-03-08T20:09:57.641Z",
+      "lastUpdated": "2026-03-08T20:09:57.645686Z",
+      "streak": 0
+    },
+    {
+      "name": "lol",
+      "text": "lol",
+      "done": false,
+      "completed": false,
+      "type": "static",
+      "target": null,
+      "unit": null,
+      "value": null,
+      "created": "2026-03-08T20:10:02.584Z",
+      "lastUpdated": "2026-03-08T20:51:39.884Z",
+      "streak": 1
+    },
+    {
+      "name": "study",
+      "text": "study",
+      "done": false,
+      "completed": false,
+      "type": "static",
+      "target": null,
+      "unit": null,
+      "value": null,
+      "created": "2026-03-08T20:10:08.218Z",
+      "lastUpdated": "2026-03-08T20:51:43.741Z",
+      "streak": 1
+    },
+    {
+      "name": "go to gym for one hour",
+      "text": "go to gym for one hour",
+      "done": true,
+      "completed": true,
+      "type": "static",
+      "target": null,
+      "unit": null,
+      "value": null,
+      "created": "2026-03-08T20:10:19.401Z",
+      "lastUpdated": "2026-03-08T20:10:20.892Z",
+      "streak": 0
+    }
+  ],
+  "history": [
+    {
+      "timestamp": "2026-03-08T20:17:57.905927Z",
+      "completed": 0,
+      "total": 0
+    },
+    {
+      "timestamp": "2026-03-08T20:18:24.838647Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:21:11.846483Z",
+      "completed": 1,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:21:12.483996Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:21:42.242415Z",
+      "completed": 0,
+      "total": 0
+    },
+    {
+      "timestamp": "2026-03-08T20:27:55.994413Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:28:08.459145Z",
+      "completed": 1,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:28:10.169147Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:28:12.197975Z",
+      "completed": 1,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:28:13.579118Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:28:14.303186Z",
+      "completed": 1,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:28:15.157602Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:28:26.019416Z",
+      "completed": 0,
+      "total": 2
+    },
+    {
+      "timestamp": "2026-03-08T20:29:06.807275Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:29:08.031640Z",
+      "completed": 0,
+      "total": 0
+    },
+    {
+      "timestamp": "2026-03-08T20:33:44.273431Z",
+      "completed": 0,
+      "total": 1
+    },
+    {
+      "timestamp": "2026-03-08T20:51:30.649633Z",
+      "completed": 1,
+      "total": 4
+    },
+    {
+      "timestamp": "2026-03-08T20:51:39.898330Z",
+      "completed": 1,
+      "total": 4
+    },
+    {
+      "timestamp": "2026-03-08T20:51:43.759122Z",
+      "completed": 1,
+      "total": 4
+    }
+  ],
+  "updated_at": "2026-03-08T20:51:43.759122Z"
+}

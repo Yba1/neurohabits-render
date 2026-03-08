@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | NeuroHabit</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(7,8,12,0.88);
+      backdrop-filter: blur(10px);
+      z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal {
+      width: 440px; padding: 36px 32px 28px;
+      background: #0d0e18;
+      border: 1px solid rgba(108,99,255,0.28);
+      border-radius: 16px;
+      box-shadow: 0 0 80px rgba(108,99,255,0.18);
+      transform: translateY(14px) scale(0.97);
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
+      opacity: 0;
+    }
+    .modal-overlay.open .modal { transform: translateY(0) scale(1); opacity: 1; }
+
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 26px;
+    }
+    .modal-header h3 {
+      font-size: 17px; font-weight: 600;
+      background: linear-gradient(90deg,#6c63ff,#00e5ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .modal-close {
+      width: 28px; height: 28px; border-radius: 7px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: transparent; color: #666; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .modal-close:hover { background: rgba(255,107,157,0.12); color: #ff6b9d; border-color: rgba(255,107,157,0.3); }
+
+    .modal-form { display: flex; flex-direction: column; gap: 18px; }
+    .form-group  { display: flex; flex-direction: column; gap: 6px; }
+    .form-label  {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #555870;
+    }
+    .form-input, .form-select {
+      width: 100%; padding: 11px 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; color: #eaeaea;
+      font-family: 'Outfit', sans-serif; font-size: 14px;
+      outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: #6c63ff;
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+    }
+    .form-input::placeholder { color: #3a3a55; }
+    .form-select { cursor: pointer; }
+    .form-select option { background: #0d0e18; }
+
+    /* Type toggle pills */
+    .type-toggle { display: flex; gap: 8px; }
+    .type-pill {
+      flex: 1; padding: 10px;
+      border: 1.5px solid rgba(255,255,255,0.08);
+      border-radius: 8px; background: transparent;
+      color: #666; font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 500; cursor: pointer;
+      transition: all 0.18s; text-align: center;
+    }
+    .type-pill:hover { border-color: rgba(108,99,255,0.35); color: #aaa; }
+    .type-pill.active-static  { border-color: #6c63ff; background: rgba(108,99,255,0.12); color: #eaeaea; box-shadow: 0 0 16px rgba(108,99,255,0.15); }
+    .type-pill.active-dynamic { border-color: #00e5ff; background: rgba(0,229,255,0.1);   color: #eaeaea; box-shadow: 0 0 16px rgba(0,229,255,0.12); }
+
+    /* Target row reveal */
+    .target-row {
+      display: flex; gap: 10px;
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+    }
+    .target-row.visible { max-height: 80px; opacity: 1; }
+
+    /* Validation */
+    .form-input.error { border-color: #ff6b9d; box-shadow: 0 0 0 3px rgba(255,107,157,0.1); }
+    .form-error { font-size: 12px; color: #ff6b9d; display: none; }
+    .form-error.show { display: block; }
+
+    /* Modal actions */
+    .modal-actions {
+      display: flex; gap: 10px; justify-content: flex-end;
+      margin-top: 6px; padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .btn-ghost {
+      padding: 10px 18px; border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px; background: transparent; color: #666;
+      font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.18s;
+    }
+    .btn-ghost:hover { border-color: #555; color: #aaa; }
+    .btn-primary {
+      padding: 10px 22px; border: none; border-radius: 8px;
+      background: linear-gradient(90deg,#6c63ff,#00e5ff);
+      color: white; font-family: 'Outfit', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: all 0.18s; letter-spacing: 0.3px;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,99,255,0.35); }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── Habit item extras ── */
+    .habit-type-pill {
+      font-family: 'DM Mono', monospace; font-size: 9px;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .htp-static  { color: #6c63ff; background: rgba(108,99,255,0.1);  border: 1px solid rgba(108,99,255,0.18); }
+    .htp-dynamic { color: #00e5ff; background: rgba(0,229,255,0.08);  border: 1px solid rgba(0,229,255,0.18); }
+
+    .dynamic-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+    .dyn-input {
+      width: 58px; padding: 5px 8px; text-align: center;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 6px; color: #eaeaea;
+      font-family: 'DM Mono', monospace; font-size: 12px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .dyn-input:focus { border-color: #00e5ff; }
+    .dyn-sep { font-family:'DM Mono',monospace; font-size:11px; color:#444; white-space:nowrap; }
+    .dyn-bar-wrap { flex:1; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
+    .dyn-bar-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,#6c63ff,#00e5ff); transition:width 0.4s ease; }
+    .dyn-pct { font-family:'DM Mono',monospace; font-size:10px; color:#555870; min-width:32px; text-align:right; }
+
+    .habit-check.done-dyn {
+      background: #00e5ff; border-color: #00e5ff; color: #07080c;
+      box-shadow: 0 0 10px rgba(0,229,255,0.3);
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #0d0e18; border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 10px; padding: 12px 22px;
+      font-size: 13px; color: #eaeaea;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      z-index: 400; opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Empty state ── */
+    .empty-state { display:none; text-align:center; padding:60px 20px; color:#555870; }
+    .empty-state.visible { display:block; }
+    .empty-icon { font-size:34px; margin-bottom:12px; opacity:0.35; }
+    .empty-state p { font-size:13px; line-height:1.7; }
+    .empty-state strong { color:#8a8aaa; font-weight:500; }
+
+    /* ── Animations ── */
+    @keyframes habitIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+    .habit-item { animation: habitIn 0.22s ease forwards; }
+
+    @keyframes firePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.25)} }
+    .streak-fire { display:inline-block; animation: firePulse 1.6s ease-in-out infinite; }
+
+    @keyframes glint { 0%{left:-60%} 100%{left:120%} }
+    .progress-bar-fill { position:relative; overflow:hidden; }
+    .progress-bar-fill::before {
+      content:''; position:absolute; top:0; left:-60%; width:40%; height:100%;
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);
+      animation: glint 2.5s ease-in-out infinite;
+    }
+
+    /* Insight card text */
+    .insight-card strong { color:#eaeaea; font-weight:500; }
+    /* ═══════════════════════════════════════
+       RADIAL PROGRESS RING
+    ═══════════════════════════════════════ */
+    .radial-wrap {
+      position: relative;
+      width: 140px; height: 140px;
+      margin: 0 auto 16px;
+    }
+    .radial-svg {
+      width: 100%; height: 100%;
+      transform: rotate(-90deg);
+    }
+    .radial-track {
+      fill: none;
+      stroke: rgba(255,255,255,0.05);
+      stroke-width: 8;
+    }
+    .radial-fill {
+      fill: none;
+      stroke: url(#radialGrad);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1);
+      filter: drop-shadow(0 0 6px rgba(108,99,255,0.6));
+    }
+    .radial-center {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .radial-pct {
+      font-family: 'DM Mono', monospace;
+      font-size: 26px; font-weight: 500;
+      background: linear-gradient(90deg,#6c63ff,#00e5ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      line-height: 1;
+    }
+    .radial-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: #555870; margin-top: 4px;
+    }
+    .progress-bar-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; color: #555870;
+      text-align: right; margin-bottom: 6px;
+    }
+
+    /* ═══════════════════════════════════════
+       UPGRADED HABIT CARDS
+    ═══════════════════════════════════════ */
+    /* Left accent border per type */
+    .habit-item { padding: 0 !important; overflow: hidden; }
+    .habit-item-static  { border-left: 3px solid #6c63ff !important; }
+    .habit-item-dynamic { border-left: 3px solid #00e5ff !important; }
+    .habit-item-static:hover  { box-shadow: 0 4px 24px rgba(108,99,255,0.12), -2px 0 0 #6c63ff; }
+    .habit-item-dynamic:hover { box-shadow: 0 4px 24px rgba(0,229,255,0.1), -2px 0 0 #00e5ff; }
+    .habit-item.completed-item { opacity: 0.55; }
+
+    /* 7-day dot grid */
+    .dot-grid {
+      display: flex; gap: 4px; align-items: center;
+      margin-top: 6px;
+    }
+    .day-dot {
+      width: 7px; height: 7px; border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .day-dot-done    { background: #00ffaa; box-shadow: 0 0 4px rgba(0,255,170,0.5); }
+    .day-dot-miss    { background: rgba(255,255,255,0.08); }
+    .day-dot-today   { background: #6c63ff; box-shadow: 0 0 6px rgba(108,99,255,0.6); }
+    .dot-grid-label  {
+      font-family: 'DM Mono', monospace; font-size: 9px;
+      color: #333; margin-left: 4px; letter-spacing: 1px;
+    }
+
+    /* Streak badge upgrade — pulse when >3 */
+    .streak-hot .streak-fire { animation: firePulse 0.8s ease-in-out infinite !important; }
+    .streak-badge.streak-hot {
+      background: rgba(255,209,102,0.14) !important;
+      border-color: rgba(255,209,102,0.35) !important;
+      color: #ffd166 !important;
+    }
+
+    /* AI button upgrade — gradient pill */
+    .ai-btn {
+      background: linear-gradient(90deg, rgba(108,99,255,0.15), rgba(0,229,255,0.1)) !important;
+      border: 1px solid rgba(108,99,255,0.35) !important;
+      color: #a0a8ff !important;
+      font-weight: 500 !important;
+      letter-spacing: 1px !important;
+    }
+    .ai-btn:hover {
+      background: linear-gradient(90deg, rgba(108,99,255,0.3), rgba(0,229,255,0.2)) !important;
+      border-color: #6c63ff !important;
+      color: #eaeaea !important;
+      box-shadow: 0 0 14px rgba(108,99,255,0.3) !important;
+      transform: translateY(-1px);
+    }
+    .ai-btn.active {
+      background: linear-gradient(90deg,#6c63ff,#00e5ff) !important;
+      border-color: transparent !important;
+      color: white !important;
+      box-shadow: 0 0 16px rgba(108,99,255,0.4) !important;
+    }
+
+    /* Upgraded progress bar — taller + glow */
+    .progress-bar-wrap { height: 10px !important; border-radius: 6px !important; }
+    .progress-bar-fill { border-radius: 6px !important; }
+    .progress-bar-fill.glow { box-shadow: 0 0 12px rgba(108,99,255,0.5); }
+
+    /* Weekly review card upgrade */
+    .weekly-review-card {
+      background: linear-gradient(135deg, rgba(108,99,255,0.1), rgba(0,229,255,0.06)) !important;
+      border: 1px solid rgba(108,99,255,0.3) !important;
+      box-shadow: 0 0 30px rgba(108,99,255,0.08) !important;
+    }
+    .weekly-review-label {
+      font-size: 10px !important;
+      letter-spacing: 2.5px !important;
+      color: #8a8aff !important;
+    }
+
+    /* Empty state upgrade */
+    .empty-icon-wrap { margin: 0 auto 16px; width: 56px; }
+    .empty-title {
+      font-size: 15px; font-weight: 500; color: #6666aa;
+      margin-bottom: 6px;
+    }
+    .empty-sub { font-size: 12px; color: #3a3a55; line-height: 1.7; }
+    .empty-sub strong { color: #6c63ff; font-weight: 500; }
+
+    /* Habit card top row */
+    .habit-top-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+    }
+
+
+    /* ═══════════════════════════════════════
+       AI HABIT PANEL (slide-out)
+    ═══════════════════════════════════════ */
+    .ai-panel {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+    }
+    .ai-panel.open { max-height: 600px; opacity: 1; }
+
+    .ai-panel-inner {
+      margin-top: 12px;
+      padding: 14px 16px;
+      background: rgba(108,99,255,0.05);
+      border: 1px solid rgba(108,99,255,0.18);
+      border-radius: 10px;
+    }
+
+    .ai-panel-header {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .ai-panel-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      background: linear-gradient(90deg,#6c63ff,#00e5ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* Preset question chips */
+    .ai-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .ai-preset-chip {
+      padding: 5px 11px;
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 20px;
+      background: rgba(108,99,255,0.08);
+      color: #8a8aaa; font-size: 11px; font-family: 'Outfit', sans-serif;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .ai-preset-chip:hover { border-color: #6c63ff; color: #eaeaea; background: rgba(108,99,255,0.15); }
+
+    /* Free-type input row */
+    .ai-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .ai-input {
+      flex: 1; padding: 9px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px; color: #eaeaea;
+      font-family: 'Outfit', sans-serif; font-size: 13px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .ai-input:focus { border-color: #6c63ff; }
+    .ai-input::placeholder { color: #3a3a55; }
+    .ai-send-btn {
+      padding: 9px 16px; border: none; border-radius: 8px;
+      background: linear-gradient(90deg,#6c63ff,#00e5ff);
+      color: white; font-size: 13px; cursor: pointer;
+      transition: all 0.18s; white-space: nowrap;
+    }
+    .ai-send-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .ai-send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* AI response bubble */
+    .ai-response {
+      min-height: 0; max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height 0.3s ease, opacity 0.25s ease;
+    }
+    .ai-response.visible { max-height: 300px; opacity: 1; }
+    .ai-response-inner {
+      padding: 12px 14px;
+      background: rgba(0,229,255,0.05);
+      border: 1px solid rgba(0,229,255,0.15);
+      border-radius: 8px;
+      font-size: 13px; line-height: 1.6; color: #c0c0d8;
+    }
+    .ai-response-inner.loading {
+      display: flex; align-items: center; gap: 8px; color: #555870;
+    }
+
+    /* Typing dots */
+    @keyframes dot { 0%,80%,100%{opacity:0.2;transform:scale(0.8)} 40%{opacity:1;transform:scale(1)} }
+    .typing-dot { width:6px; height:6px; border-radius:50%; background:#6c63ff; display:inline-block; }
+    .typing-dot:nth-child(1){animation:dot 1.2s ease-in-out infinite}
+    .typing-dot:nth-child(2){animation:dot 1.2s ease-in-out 0.2s infinite}
+    .typing-dot:nth-child(3){animation:dot 1.2s ease-in-out 0.4s infinite}
+
+    /* AI button on habit row */
+    .ai-btn {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 10px;
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 20px;
+      background: rgba(108,99,255,0.08);
+      color: #8a8aaa; font-size: 10px;
+      font-family: 'DM Mono', monospace; letter-spacing: 0.5px;
+      cursor: pointer; transition: all 0.15s; flex-shrink: 0;
+    }
+    .ai-btn:hover { border-color: #6c63ff; color: #eaeaea; background: rgba(108,99,255,0.18); }
+    .ai-btn.active { border-color: #6c63ff; color: #6c63ff; background: rgba(108,99,255,0.15); }
+
+    /* ═══════════════════════════════════════
+       WEEKLY REVIEW CARD
+    ═══════════════════════════════════════ */
+    .weekly-review-card {
+      margin-bottom: 14px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(0,229,255,0.05));
+      border: 1px solid rgba(108,99,255,0.22);
+      border-radius: 12px;
+      position: relative; overflow: hidden;
+    }
+    .weekly-review-card::before {
+      content: '';
+      position: absolute; top:0; left:0; right:0; height:2px;
+      background: linear-gradient(90deg,#6c63ff,#00e5ff);
+    }
+    .weekly-review-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: #6c63ff; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .weekly-review-text {
+      font-size: 13px; line-height: 1.65; color: #9a9ab8;
+    }
+    .weekly-review-text.loading { color: #444; font-style: italic; }
+
+    /* ═══════════════════════════════════════
+       SMART NUDGE BANNER
+    ═══════════════════════════════════════ */
+    .nudge-banner {
+      display: none;
+      align-items: center; gap: 12px;
+      padding: 12px 16px;
+      background: rgba(255,209,102,0.06);
+      border: 1px solid rgba(255,209,102,0.2);
+      border-radius: 10px;
+      margin-bottom: 14px;
+      font-size: 13px; color: #c8a84b; line-height: 1.5;
+    }
+    .nudge-banner.visible { display: flex; }
+    .nudge-icon { font-size: 16px; flex-shrink: 0; }
+    .nudge-dismiss {
+      margin-left: auto; background: none; border: none;
+      color: #666; font-size: 16px; cursor: pointer;
+      flex-shrink: 0; transition: color 0.15s;
+    }
+    .nudge-dismiss:hover { color: #ffd166; }
+  </style>
+</head>
+<body>
+
+  <!-- SVG gradient defs for radial ring -->
+  <svg width="0" height="0" style="position:absolute">
+    <defs>
+      <linearGradient id="radialGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#6c63ff"/>
+        <stop offset="100%" stop-color="#00e5ff"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+  <div class="noise"></div>
+
+  <div class="app">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo">NeuroHabit</div>
+      <div class="header-center">
+        <div class="header-title">Your Habit Dashboard</div>
+        <div class="header-date" id="headerDate"></div>
+      </div>
+      <button class="add-habit-btn" onclick="openModal()">
+        <span class="plus">+</span> Add Habit
+      </button>
+    </header>
+
+    <!-- MAIN GRID -->
+    <div class="main-grid">
+
+      <!-- LEFT: PROGRESS -->
+      <aside class="panel progress-panel">
+        <div class="panel-label">Today's Progress</div>
+
+        <!-- Radial ring hero -->
+        <div class="radial-wrap">
+          <svg class="radial-svg" viewBox="0 0 120 120">
+            <circle class="radial-track" cx="60" cy="60" r="50"/>
+            <circle class="radial-fill" id="radialFill" cx="60" cy="60" r="50"
+              stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="radial-center">
+            <div class="radial-pct" id="progressPct">0%</div>
+            <div class="radial-label">today</div>
+          </div>
+        </div>
+
+        <!-- Thin bar for extra detail -->
+        <div class="progress-bar-wrap" style="margin-bottom:4px;">
+          <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+        </div>
+        <div class="progress-bar-label" id="progressBarLabel">0 of 0 complete</div>
+
+        <div class="habit-group-label" style="margin-top:20px;">Completed</div>
+        <ul class="mini-habit-list" id="completedMiniList"></ul>
+
+        <div class="habit-group-label">Pending</div>
+        <ul class="mini-habit-list" id="pendingMiniList"></ul>
+      </aside>
+
+      <!-- CENTER: HABITS -->
+      <main class="panel habits-panel">
+        <div class="panel-label">
+          <span>Your Habits</span>
+          <span class="habit-count" id="habitCount">0 habits</span>
+        </div>
+        <ul id="habitList"></ul>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon-wrap">
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+              <circle cx="28" cy="28" r="27" stroke="rgba(108,99,255,0.2)" stroke-width="1.5" stroke-dasharray="4 4"/>
+              <circle cx="28" cy="28" r="18" stroke="rgba(108,99,255,0.12)" stroke-width="1"/>
+              <text x="28" y="34" text-anchor="middle" font-size="18" fill="rgba(108,99,255,0.4)">◎</text>
+            </svg>
+          </div>
+          <p class="empty-title">No habits yet</p>
+          <p class="empty-sub">Click <strong>+ Add Habit</strong> to start building your streak.</p>
+        </div>
+      </main>
+
+      <!-- RIGHT: AI INSIGHTS -->
+      <aside class="panel insights-panel">
+        <div class="panel-label">AI Insights</div>
+
+        <!-- Smart Nudge Banner -->
+        <div class="nudge-banner" id="nudgeBanner">
+          <span class="nudge-icon">⚡</span>
+          <span id="nudgeText"></span>
+          <button class="nudge-dismiss" onclick="dismissNudge()">×</button>
+        </div>
+
+        <!-- Weekly Review Card -->
+        <div class="weekly-review-card" id="weeklyReviewCard" style="display:none">
+          <div class="weekly-review-label">📋 Weekly Coach Debrief</div>
+          <div class="weekly-review-text loading" id="weeklyReviewText">Loading your weekly review…</div>
+        </div>
+
+        <div class="insights-list" id="insightsList">
+          <div class="insight-card">
+            <div class="insight-quote">Tip</div>
+            Add your first habits to unlock personalized insights.
+          </div>
+        </div>
+        <button class="ask-insight-btn" onclick="generateInsights()">
+          <span>Refresh Insights</span>
+          <span class="ask-icons">🔍 ✦</span>
+        </button>
+      </aside>
+
+    </div>
+
+    <!-- HEATMAP -->
+    <section class="heatmap-section">
+      <div class="heatmap-label">Weekly Habit Heatmap — Last 7 Days</div>
+      <div class="heatmap-grid" id="heatmapGrid"></div>
+    </section>
+
+  </div>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>New Habit</h3>
+        <button class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-form">
+
+        <div class="form-group">
+          <label class="form-label">Habit Name</label>
+          <input class="form-input" id="modalHabitName" placeholder="e.g. Read 20 min, Go to gym…" autocomplete="off">
+          <span class="form-error" id="nameError">Please enter a habit name.</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Habit Type</label>
+          <div class="type-toggle">
+            <button class="type-pill active-static" id="pillStatic"  onclick="setType('static')">✔ Static</button>
+            <button class="type-pill"               id="pillDynamic" onclick="setType('dynamic')">◎ Dynamic</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="targetLabel" style="display:none">Target Value</label>
+          <div class="target-row" id="targetRow">
+            <input class="form-input" id="modalTarget" type="number" min="1" placeholder="e.g. 20">
+            <input class="form-input" id="modalUnit" placeholder="unit (min, g, pages…)">
+          </div>
+          <span class="form-error" id="targetError">Please enter a target value.</span>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-ghost"   onclick="closeModal()">Cancel</button>
+          <button class="btn-primary" onclick="addHabitFromModal()">Add Habit</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // ─── STATE ───────────────────────────────────
+  let habits  = JSON.parse(localStorage.getItem('nh_habits'))  || [];
+  let history = JSON.parse(localStorage.getItem('nh_history')) || {};
+  let selectedType = 'static';
+
+  // ─── INIT ────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    setHeaderDate();
+    resetDailyIfNeeded();
+    renderAll();
+    renderHeatmap();
+  });
+
+  function setHeaderDate() {
+    document.getElementById('headerDate').textContent =
+      new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+
+  function todayKey() { return new Date().toISOString().slice(0,10); }
+
+  function resetDailyIfNeeded() {
+    const today     = todayKey();
+    const lastReset = localStorage.getItem('nh_lastReset');
+    if (lastReset === today) return;
+    if (lastReset) {
+      history[lastReset] = calcOverallPct();
+      localStorage.setItem('nh_history', JSON.stringify(history));
+    }
+    habits.forEach(h => {
+      h.completed = false;
+      if (h.type === 'dynamic') h.currentValue = 0;
+    });
+    localStorage.setItem('nh_lastReset', today);
+    saveHabits();
+  }
+
+  // ─── RENDER ──────────────────────────────────
+  function renderAll() { renderHabits(); renderProgress(); generateInsights(); }
+
+  function build7DotGrid(habit) {
+    // Build a 7-day dot grid from history + today
+    const wrap = document.createElement('div');
+    wrap.className = 'dot-grid';
+    const dayLabels = ['S','M','T','W','T','F','S'];
+    for (let d = 6; d >= 0; d--) {
+      const date = new Date(); date.setDate(date.getDate() - d);
+      const key  = date.toISOString().slice(0,10);
+      const dot  = document.createElement('div');
+      if (d === 0) {
+        dot.className = habit.completed ? 'day-dot day-dot-done' : 'day-dot day-dot-today';
+        dot.title = 'Today';
+      } else {
+        const hist = history[key];
+        dot.className = (hist !== undefined && hist > 0) ? 'day-dot day-dot-done' : 'day-dot day-dot-miss';
+        dot.title = key;
+      }
+      wrap.appendChild(dot);
+    }
+    const lbl = document.createElement('span');
+    lbl.className = 'dot-grid-label';
+    lbl.textContent = '7d';
+    wrap.appendChild(lbl);
+    return wrap;
+  }
+
+  function renderHabits() {
+    const list    = document.getElementById('habitList');
+    const empty   = document.getElementById('emptyState');
+    const countEl = document.getElementById('habitCount');
+
+    list.innerHTML = '';
+    countEl.textContent = habits.length + (habits.length === 1 ? ' habit' : ' habits');
+
+    if (!habits.length) { empty.classList.add('visible'); return; }
+    empty.classList.remove('visible');
+
+    habits.forEach((habit, i) => {
+      const li = document.createElement('li');
+      const isDynamic = habit.type === 'dynamic';
+      li.className = 'habit-item ' + (isDynamic ? 'habit-item-dynamic' : 'habit-item-static');
+      if (habit.completed) li.classList.add('completed-item');
+      li.style.animationDelay = (i * 0.04) + 's';
+
+      // Check
+      const check = document.createElement('div');
+      if (!isDynamic) {
+        check.className = 'habit-check' + (habit.completed ? ' done' : '');
+        check.innerHTML = habit.completed ? '✓' : '';
+        check.onclick   = () => toggleStatic(i);
+      } else {
+        const pct = dynPct(habit);
+        check.className = 'habit-check' + (pct >= 100 ? ' done-dyn' : '');
+        check.innerHTML = pct >= 100 ? '✓' : '';
+      }
+
+      // Info
+      const info = document.createElement('div');
+      info.className = 'habit-info';
+
+      const name = document.createElement('div');
+      name.className   = 'habit-name' + (habit.completed ? ' done' : '');
+      name.textContent = habit.text;
+
+      const meta = document.createElement('div');
+      meta.className = 'habit-meta';
+
+      const tp = document.createElement('span');
+      tp.className   = 'habit-type-pill ' + (isDynamic ? 'htp-dynamic' : 'htp-static');
+      tp.textContent = habit.type;
+
+      const streak = habit.streak || 0;
+      const sb = document.createElement('span');
+      sb.className = 'streak-badge' + (streak >= 3 ? ' streak-hot' : '');
+      sb.innerHTML = `<span class="streak-fire">🔥</span> ${streak} day streak`;
+
+      meta.appendChild(tp);
+      meta.appendChild(sb);
+      info.appendChild(name);
+      info.appendChild(meta);
+
+      // 7-day dot grid
+      info.appendChild(build7DotGrid(habit));
+
+      // Dynamic row
+      if (isDynamic) {
+        const row = document.createElement('div');
+        row.className = 'dynamic-row';
+
+        const inp = document.createElement('input');
+        inp.type      = 'number'; inp.min = '0';
+        inp.value     = habit.currentValue || 0;
+        inp.className = 'dyn-input';
+        inp.oninput   = e => updateDynamic(i, parseFloat(e.target.value) || 0);
+
+        const sep = document.createElement('span');
+        sep.className   = 'dyn-sep';
+        sep.textContent = '/ ' + (habit.targetValue || '?') + (habit.unit ? ' ' + habit.unit : '');
+
+        const bw = document.createElement('div'); bw.className = 'dyn-bar-wrap';
+        const bf = document.createElement('div'); bf.className = 'dyn-bar-fill';
+        bf.style.width = Math.min(100, dynPct(habit)) + '%';
+        bw.appendChild(bf);
+
+        const pl = document.createElement('span');
+        pl.className   = 'dyn-pct';
+        pl.textContent = Math.min(100, dynPct(habit)) + '%';
+
+        row.appendChild(inp); row.appendChild(sep); row.appendChild(bw); row.appendChild(pl);
+        info.appendChild(row);
+      }
+
+      // AI button — gradient pill
+      const aib = document.createElement('button');
+      aib.className = 'ai-btn';
+      aib.id = 'ai-btn-' + i;
+      aib.innerHTML = '✦ AI';
+      aib.onclick = () => toggleAIPanel(i);
+
+      // Delete
+      const del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.innerHTML = '×';
+      del.onclick   = () => deleteHabit(i);
+
+      // AI slide-out panel
+      const aiPanel = document.createElement('div');
+      aiPanel.className = 'ai-panel';
+      aiPanel.id = 'ai-panel-' + i;
+      aiPanel.style.cssText = 'padding:0 16px 0;';
+      aiPanel.innerHTML = buildAIPanelHTML(i);
+
+      // Wrapper
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'display:flex;flex-direction:column;';
+      const topRow = document.createElement('div');
+      topRow.className = 'habit-top-row';
+
+      topRow.appendChild(check);
+      topRow.appendChild(info);
+      topRow.appendChild(aib);
+      topRow.appendChild(del);
+      wrapper.appendChild(topRow);
+      wrapper.appendChild(aiPanel);
+
+      li.appendChild(wrapper);
+      list.appendChild(li);
+    });
+  }
+
+  // ─── ACTIONS ─────────────────────────────────
+  function toggleStatic(i) {
+    const h = habits[i], was = h.completed;
+    h.completed = !h.completed;
+    h.lastUpdated = new Date().toISOString();
+    if (h.completed && !was) { updateStreak(h); showToast('✓  "' + h.text + '" marked complete!'); }
+    saveHabits(); renderAll(); renderHeatmap();
+  }
+
+  function updateDynamic(i, val) {
+    const h = habits[i], was = h.completed;
+    h.currentValue = val;
+    h.completed    = val >= (h.targetValue || 1);
+    h.lastUpdated  = new Date().toISOString();
+
+    // Surgical DOM update — no full re-render so the input keeps focus
+    const li = document.querySelectorAll('#habitList .habit-item')[i];
+    if (li) {
+      const pct   = Math.min(100, Math.round((val / (h.targetValue || 1)) * 100));
+      const bf    = li.querySelector('.dyn-bar-fill');
+      const pl    = li.querySelector('.dyn-pct');
+      const check = li.querySelector('.habit-check');
+      const name  = li.querySelector('.habit-name');
+      if (bf)    bf.style.width  = pct + '%';
+      if (pl)    pl.textContent  = pct + '%';
+      if (check) {
+        check.className = 'habit-check' + (pct >= 100 ? ' done-dyn' : '');
+        check.innerHTML = pct >= 100 ? '✓' : '';
+      }
+      if (name) { pct >= 100 ? name.classList.add('done') : name.classList.remove('done'); }
+    }
+
+    if (h.completed && !was) { updateStreak(h); showToast('🎯  "' + h.text + '" target reached!'); }
+    saveHabits();
+    renderProgress();
+    renderHeatmap();
+  }
+
+  function deleteHabit(i) {
+    const name = habits[i].text;
+    habits.splice(i, 1);
+    saveHabits(); renderAll(); renderHeatmap();
+    showToast('🗑  "' + name + '" removed.');
+  }
+
+  // ─── STREAK ──────────────────────────────────
+  function updateStreak(h) {
+    if (!h.lastUpdated) { h.streak = 1; return; }
+    const last = new Date(h.lastUpdated), today = new Date();
+    last.setHours(0,0,0,0); today.setHours(0,0,0,0);
+    const diff = Math.round((today - last) / 86400000);
+    h.streak = (diff === 0 || diff === 1) ? (h.streak || 0) + 1 : 1;
+  }
+
+  // ─── PROGRESS ────────────────────────────────
+  function dynPct(h) { return Math.round(((h.currentValue||0) / (h.targetValue||1)) * 100); }
+
+  function calcOverallPct() {
+    if (!habits.length) return 0;
+    const total = habits.reduce((sum, h) =>
+      sum + (h.type === 'static' ? (h.completed ? 100 : 0) : Math.min(100, dynPct(h))), 0);
+    return Math.round(total / habits.length);
+  }
+
+  function renderProgress() {
+    const pct = calcOverallPct();
+
+    // Thin bar
+    const fill = document.getElementById('progressFill');
+    fill.style.width = pct + '%';
+    if (pct > 0) fill.classList.add('glow'); else fill.classList.remove('glow');
+
+    // Radial ring — circumference = 2πr = 2π*50 ≈ 314
+    const circumference = 314;
+    const offset = circumference - (pct / 100) * circumference;
+    const radial = document.getElementById('radialFill');
+    if (radial) radial.style.strokeDashoffset = offset;
+
+    // Percentage text
+    document.getElementById('progressPct').textContent = pct + '%';
+
+    // Bar label
+    const done = habits.filter(h => h.completed).length;
+    const barLabel = document.getElementById('progressBarLabel');
+    if (barLabel) barLabel.textContent = done + ' of ' + habits.length + ' complete';
+
+    renderMiniList('completedMiniList', habits.filter(h => h.completed), true);
+    renderMiniList('pendingMiniList',   habits.filter(h => !h.completed), false);
+  }
+
+  function renderMiniList(id, list, done) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    if (!list.length) {
+      el.innerHTML = '<li class="mini-habit" style="color:#333;font-size:12px;font-style:italic;">None</li>';
+      return;
+    }
+    list.forEach(h => {
+      const li  = document.createElement('li'); li.className = 'mini-habit';
+      const dot = document.createElement('span');
+      dot.className = 'mini-dot ' + (done ? 'dot-done' : (h.type === 'dynamic' ? 'dot-dynamic' : 'dot-pending'));
+      const sp  = document.createElement('span'); sp.textContent = h.text;
+      li.appendChild(dot); li.appendChild(sp); el.appendChild(li);
+    });
+  }
+
+  // ─── SAVE ────────────────────────────────────
+  function saveHabits() {
+    localStorage.setItem('nh_habits', JSON.stringify(habits));
+    // Sync to Flask backend
+    fetch('/api/habits', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ habits })
+    }).catch(() => {}); // silent fail — localStorage is source of truth
+  }
+
+  // ─── MODAL ───────────────────────────────────
+  function openModal() {
+    selectedType = 'static';
+    syncPills();
+    document.getElementById('targetRow').classList.remove('visible');
+    document.getElementById('targetLabel').style.display = 'none';
+    clearErrors();
+    document.getElementById('modalOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('modalHabitName').focus(), 200);
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('modalHabitName').value = '';
+    document.getElementById('modalTarget').value    = '';
+    document.getElementById('modalUnit').value      = '';
+    clearErrors();
+  }
+
+  function setType(type) {
+    selectedType = type;
+    syncPills();
+    const row   = document.getElementById('targetRow');
+    const label = document.getElementById('targetLabel');
+    if (type === 'dynamic') { row.classList.add('visible'); label.style.display = 'block'; }
+    else                    { row.classList.remove('visible'); label.style.display = 'none'; }
+  }
+
+  function syncPills() {
+    document.getElementById('pillStatic').className  = 'type-pill' + (selectedType === 'static'  ? ' active-static'  : '');
+    document.getElementById('pillDynamic').className = 'type-pill' + (selectedType === 'dynamic' ? ' active-dynamic' : '');
+  }
+
+  function clearErrors() {
+    ['nameError','targetError'].forEach(id => document.getElementById(id).classList.remove('show'));
+    ['modalHabitName','modalTarget'].forEach(id => document.getElementById(id).classList.remove('error'));
+  }
+
+  function addHabitFromModal() {
+    clearErrors();
+    const text   = document.getElementById('modalHabitName').value.trim();
+    const target = parseFloat(document.getElementById('modalTarget').value);
+    const unit   = document.getElementById('modalUnit').value.trim();
+    let valid = true;
+
+    if (!text) {
+      document.getElementById('nameError').classList.add('show');
+      document.getElementById('modalHabitName').classList.add('error');
+      valid = false;
+    }
+    if (selectedType === 'dynamic' && (!target || target <= 0)) {
+      document.getElementById('targetError').classList.add('show');
+      document.getElementById('modalTarget').classList.add('error');
+      valid = false;
+    }
+    if (!valid) return;
+
+    habits.push({
+      text, type: selectedType,
+      completed: false, currentValue: 0,
+      targetValue: selectedType === 'dynamic' ? target : 1,
+      unit: unit || '',
+      created: new Date().toISOString(), lastUpdated: null, streak: 0
+    });
+
+    saveHabits(); renderAll(); renderHeatmap();
+    closeModal();
+    showToast('✦  "' + text + '" added!');
+  }
+
+  // Modal keyboard / overlay close
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Enter' && document.getElementById('modalOverlay').classList.contains('open'))
+      addHabitFromModal();
+  });
+
+  // ─── HEATMAP ─────────────────────────────────
+  function renderHeatmap() {
+    const grid = document.getElementById('heatmapGrid');
+    grid.innerHTML = '';
+    const dayLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for (let d = 6; d >= 0; d--) {
+      const date  = new Date(); date.setDate(date.getDate() - d);
+      const key   = date.toISOString().slice(0,10);
+      const label = dayLabels[date.getDay()];
+      const pct   = d === 0 ? calcOverallPct() : (history[key] !== undefined ? history[key] : 0);
+
+      const col = document.createElement('div'); col.className = 'heatmap-day';
+      const lbl = document.createElement('div'); lbl.className = 'heatmap-day-name'; lbl.textContent = label;
+      const bw  = document.createElement('div'); bw.className  = 'heatmap-bar-wrap';
+      const bf  = document.createElement('div'); bf.className  = 'heatmap-bar-fill'; bf.style.width = '0%';
+      const pe  = document.createElement('div'); pe.className  = 'heatmap-pct'; pe.textContent = pct + '%';
+
+      bw.appendChild(bf);
+      col.appendChild(lbl); col.appendChild(bw); col.appendChild(pe);
+      grid.appendChild(col);
+      setTimeout(() => { bf.style.width = pct + '%'; }, 80 + (6-d) * 60);
+    }
+  }
+
+  // ─── AI INSIGHTS ─────────────────────────────
+  const insightFns = [
+    h => {
+      const done = h.filter(x => x.completed).length;
+      if (done === h.length && h.length > 0)
+        return { tag:'🏆 Champion', text:`All <strong>${h.length}</strong> habits done today. You're on fire!` };
+      return { tag:'📊 Progress', text:`<strong>${done} of ${h.length}</strong> habits completed today.` };
+    },
+    h => {
+      if (!h.length) return { tag:'💡 Tip', text:'Start with 2–3 small habits to build momentum.' };
+      const best = h.reduce((a,b) => (b.streak||0) > (a.streak||0) ? b : a);
+      return { tag:'🔥 Best Streak', text:`<strong>"${best.text}"</strong> leads at ${best.streak || 0} consecutive days.` };
+    },
+    h => {
+      const dyn  = h.filter(x => x.type === 'dynamic');
+      if (!dyn.length) return { tag:'💡 Tip', text:'Try a <strong>dynamic habit</strong> to track goals like reading minutes or protein intake.' };
+      const near = dyn.filter(x => dynPct(x) >= 70 && !x.completed);
+      if (near.length) return { tag:'⚡ Almost There', text:`You're close on <strong>${near.length}</strong> dynamic goal${near.length>1?'s':''}. Push through!` };
+      return { tag:'💡 Tip', text:'Log values on your dynamic habits to watch your progress bars grow.' };
+    },
+    h => {
+      const pending = h.filter(x => !x.completed);
+      if (!pending.length) return { tag:'🌟 All Done', text:'Every habit complete — enjoy your day!' };
+      const next = pending.find(x => x.type === 'static') || pending[0];
+      return { tag:'👆 Next Up', text:`Knock out <strong>"${next.text}"</strong> next.` };
+    },
+    () => ({ tag:'🧠 Science', text:'Habit stacking — pairing a new habit with an existing one — triples success rates.' }),
+    () => ({ tag:'⏰ Timing',  text:'Morning habit completion averages <strong>45% higher</strong> than evening habits.' }),
+  ];
+
+  async function generateInsights() {
+    const list = document.getElementById('insightsList');
+    if (!habits.length) {
+      list.innerHTML = '<div class="insight-card"><div class="insight-quote">Tip</div>Add your first habits to unlock personalized insights.</div>';
+      return;
+    }
+
+    // Show loading skeletons
+    list.innerHTML = [0,1,2].map(() =>
+      `<div class="insight-card" style="opacity:0.4">
+        <div class="insight-quote">...</div>
+        <div style="height:12px;background:rgba(255,255,255,0.06);border-radius:4px;margin-bottom:6px;"></div>
+        <div style="height:12px;background:rgba(255,255,255,0.04);border-radius:4px;width:70%;"></div>
+      </div>`
+    ).join('');
+
+    try {
+      const res  = await fetch('/api/ai-insight', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ habits, history }) });
+      const data = await res.json();
+      const aiText = data.insight || '';
+
+      list.innerHTML = '';
+
+      // Show the real AI insight as first card
+      if (aiText) {
+        const aiCard = document.createElement('div');
+        aiCard.className = 'insight-card';
+        aiCard.innerHTML = `<div class="insight-quote">🤖 AI Coach</div>${aiText}`;
+        aiCard.style.cssText = 'opacity:0;transform:translateY(6px);transition:opacity 0.3s ease,transform 0.3s ease;';
+        list.appendChild(aiCard);
+        setTimeout(() => { aiCard.style.opacity='1'; aiCard.style.transform='translateY(0)'; }, 50);
+      }
+
+      // Fill remaining cards with local insights
+      const remaining = [...insightFns].sort(() => Math.random() - 0.5).slice(0, aiText ? 2 : 3);
+      remaining.forEach((fn, i) => {
+        const { tag, text } = fn(habits);
+        const card = document.createElement('div');
+        card.className = 'insight-card';
+        card.innerHTML = `<div class="insight-quote">${tag}</div>${text}`;
+        card.style.cssText = 'opacity:0;transform:translateY(6px);transition:opacity 0.3s ease,transform 0.3s ease;';
+        list.appendChild(card);
+        setTimeout(() => { card.style.opacity='1'; card.style.transform='translateY(0)'; }, (i+1) * 90);
+      });
+
+    } catch(_) {
+      // Fallback to local insights if backend unreachable
+      list.innerHTML = '';
+      const picked = [...insightFns].sort(() => Math.random() - 0.5).slice(0,3);
+      picked.forEach((fn, i) => {
+        const { tag, text } = fn(habits);
+        const card = document.createElement('div');
+        card.className = 'insight-card';
+        card.innerHTML = `<div class="insight-quote">${tag}</div>${text}`;
+        card.style.cssText = 'opacity:0;transform:translateY(6px);transition:opacity 0.3s ease,transform 0.3s ease;';
+        list.appendChild(card);
+        setTimeout(() => { card.style.opacity='1'; card.style.transform='translateY(0)'; }, i * 90);
+      });
+    }
+  }
+
+  // ─── TOAST ───────────────────────────────────
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+  }
+
+  // ─── PER-HABIT AI PANEL ──────────────────────
+  function buildAIPanelHTML(i) {
+    const h = habits[i];
+    const isStatic = h.type === 'static';
+    const presets = isStatic ? [
+      'How do I stay consistent with this?',
+      'What time of day is best for this?',
+      'How do I build this into a routine?'
+    ] : [
+      'How do I hit my target more often?',
+      'Is my target realistic?',
+      'What helps with consistency on this?'
+    ];
+
+    const chips = presets.map(q =>
+      `<button class="ai-preset-chip" onclick="askHabitAI(${i}, '${q.replace(/'/g, "\'")}', this)">${q}</button>`
+    ).join('');
+
+    return `
+      <div class="ai-panel-inner">
+        <div class="ai-panel-header">
+          <span class="ai-panel-title">✦ Ask AI about this habit</span>
+        </div>
+        <div class="ai-presets">${chips}</div>
+        <div class="ai-input-row">
+          <input class="ai-input" id="ai-input-${i}" placeholder="Ask anything about this habit…">
+          <button class="ai-send-btn" id="ai-send-${i}" onclick="submitHabitAI(${i})">Ask →</button>
+        </div>
+        <div class="ai-response" id="ai-response-${i}">
+          <div class="ai-response-inner"></div>
+        </div>
+      </div>`;
+  }
+
+  function toggleAIPanel(i) {
+    const panel = document.getElementById('ai-panel-' + i);
+    const btn   = document.getElementById('ai-btn-' + i);
+    if (!panel) return;
+    const isOpen = panel.classList.contains('open');
+    // Close all other panels first
+    document.querySelectorAll('.ai-panel.open').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.ai-btn.active').forEach(b => b.classList.remove('active'));
+    if (!isOpen) {
+      panel.classList.add('open');
+      btn.classList.add('active');
+      // Rebuild HTML so index is always fresh
+      panel.innerHTML = buildAIPanelHTML(i);
+    }
+  }
+
+  function askHabitAI(i, question, chipEl) {
+    const input = document.getElementById('ai-input-' + i);
+    if (input) input.value = question;
+    // Highlight selected chip
+    chipEl.closest('.ai-presets').querySelectorAll('.ai-preset-chip').forEach(c => c.style.borderColor = '');
+    chipEl.style.borderColor = '#6c63ff';
+    chipEl.style.color = '#eaeaea';
+    submitHabitAI(i);
+  }
+
+  async function submitHabitAI(i) {
+    const h       = habits[i];
+    const input   = document.getElementById('ai-input-' + i);
+    const sendBtn = document.getElementById('ai-send-' + i);
+    const respDiv = document.getElementById('ai-response-' + i);
+    const question = input ? input.value.trim() : '';
+    if (!question) return;
+
+    // Show loading state
+    sendBtn.disabled = true;
+    sendBtn.textContent = '…';
+    respDiv.classList.add('visible');
+    respDiv.querySelector('.ai-response-inner').innerHTML =
+      `<div class="loading">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span style="margin-left:6px;font-size:12px;">Thinking…</span>
+      </div>`;
+
+    try {
+      const res = await fetch('/api/habit-insight', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ habit: h, question, history })
+      });
+      const data = await res.json();
+      respDiv.querySelector('.ai-response-inner').className = 'ai-response-inner';
+      respDiv.querySelector('.ai-response-inner').textContent = data.response || 'No response received.';
+    } catch(_) {
+      respDiv.querySelector('.ai-response-inner').className = 'ai-response-inner';
+      respDiv.querySelector('.ai-response-inner').textContent = 'Could not reach AI. Check your connection.';
+    }
+
+    sendBtn.disabled = false;
+    sendBtn.textContent = 'Ask →';
+  }
+
+  // Enter key in AI input
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.classList.contains('ai-input')) {
+      const id = e.target.id.replace('ai-input-', '');
+      submitHabitAI(parseInt(id));
+    }
+  });
+
+  // ─── WEEKLY REVIEW ───────────────────────────
+  async function loadWeeklyReview() {
+    // Only show on Mondays or if forced — great for demos just always show if habits exist
+    if (!habits.length) return;
+    const card = document.getElementById('weeklyReviewCard');
+    const text = document.getElementById('weeklyReviewText');
+    card.style.display = 'block';
+
+    // Check cache — only re-fetch once per day
+    const cacheKey = 'nh_weekly_review';
+    const cacheDate = localStorage.getItem('nh_weekly_review_date');
+    if (cacheDate === todayKey()) {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) { text.textContent = cached; text.classList.remove('loading'); return; }
+    }
+
+    try {
+      const res  = await fetch('/api/weekly-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ habits, history })
+      });
+      const data = await res.json();
+      const review = data.review || '';
+      text.textContent = review;
+      text.classList.remove('loading');
+      localStorage.setItem(cacheKey, review);
+      localStorage.setItem('nh_weekly_review_date', todayKey());
+    } catch(_) {
+      text.textContent = 'Weekly review unavailable — check your connection.';
+      text.classList.remove('loading');
+    }
+  }
+
+  // ─── SMART NUDGE ─────────────────────────────
+  function checkSmartNudge() {
+    if (!habits.length) return;
+    const hour = new Date().getHours();
+    if (hour < 18) return; // Only nudge after 6pm
+
+    const dismissed = localStorage.getItem('nh_nudge_dismissed');
+    if (dismissed === todayKey()) return;
+
+    const pending = habits.filter(h => !h.completed);
+    if (!pending.length) return;
+
+    const banner = document.getElementById('nudgeBanner');
+    const text   = document.getElementById('nudgeText');
+    const count  = pending.length;
+    const names  = pending.slice(0,2).map(h => `"${h.text}"`).join(' and ');
+    const extra  = count > 2 ? ` (+${count-2} more)` : '';
+    text.innerHTML = `It's evening and you still have <strong>${count} habit${count>1?'s':''}</strong> pending: ${names}${extra}. Don't break the streak!`;
+    banner.classList.add('visible');
+  }
+
+  function dismissNudge() {
+    document.getElementById('nudgeBanner').classList.remove('visible');
+    localStorage.setItem('nh_nudge_dismissed', todayKey());
+  }
+
+  // ─── BOOT AI FEATURES ────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(loadWeeklyReview, 800);
+    setTimeout(checkSmartNudge, 1200);
+  });
+  </script>
+</body>
+</html>
