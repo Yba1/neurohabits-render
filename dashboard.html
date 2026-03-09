@@ -648,8 +648,8 @@ window.NH_USER = null;
         <div class="form-group">
           <label class="form-label">Habit Type</label>
           <div class="type-toggle">
-            <button class="type-pill active-static" id="pillStatic" title="Static = simple done/not done habit (e.g., meditate)." onclick="setType('static')"> Static</button>
-            <button class="type-pill" id="pillDynamic" title="Dynamic = track a number toward a target (e.g., read 20 pages)." onclick="setType('dynamic')"> Dynamic</button>
+            <button type="button" class="type-pill active-static" id="pillStatic" title="Static = simple done/not done habit (e.g., meditate)." onclick="setType('static')"> Static</button>
+            <button type="button" class="type-pill" id="pillDynamic" title="Dynamic = track a number toward a target (e.g., read 20 pages)." onclick="setType('dynamic')"> Dynamic</button>
           </div>
         </div>
 
@@ -683,8 +683,8 @@ window.NH_USER = null;
           </div>
         </div>
 <div class="modal-actions">
-          <button class="btn-ghost"   onclick="closeModal()">Cancel</button>
-          <button class="btn-primary" onclick="addHabitFromModal()">Add Habit</button>
+          <button type="button" class="btn-ghost"   onclick="closeModal()">Cancel</button>
+          <button type="button" class="btn-primary" onclick="addHabitFromModal()">Add Habit</button>
         </div>
 
       </div>
@@ -1067,7 +1067,6 @@ window.NH_USER = null;
     topRow.appendChild(check);
     topRow.appendChild(info);
     topRow.appendChild(aib);
-    topRow.appendChild(moveBtn);
     topRow.appendChild(del);
     wrapper.appendChild(topRow);
     wrapper.appendChild(aiPanel);
@@ -1747,6 +1746,8 @@ window.NH_USER = null;
   </script>
 </body>
 </html>
+
+
 
 
 
