@@ -140,7 +140,7 @@
     .dyn-input:focus { border-color: #00e5ff; }
     .dyn-sep { font-family:'DM Mono',monospace; font-size:11px; color:#444; white-space:nowrap; }
     .dyn-bar-wrap { flex:1; height:4px; background:rgba(255,255,255,0.06); border-radius:2px; overflow:hidden; }
-    .dyn-bar-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,#6c63ff,#00e5ff); transition:width 0.4s ease; }
+    .dyn-bar-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,#6c63ff,#00e5ff); transition:none; }
     .dyn-pct { font-family:'DM Mono',monospace; font-size:10px; color:#555870; min-width:32px; text-align:right; }
 
     .habit-check.done-dyn {
@@ -1026,6 +1026,7 @@ window.NH_USER = null;
 
   function createHabitItem(habit, i) {
     const li = document.createElement('li');
+    li.dataset.habitIndex = String(i);
     const isDynamic = habit.type === 'dynamic';
     li.className = 'habit-item ' + (isDynamic ? 'habit-item-dynamic' : 'habit-item-static');
     if (habit.completed) li.classList.add('completed-item');
@@ -1180,7 +1181,7 @@ window.NH_USER = null;
     logDynamicProgress(h);
 
     // Surgical DOM update  no full re-render so the input keeps focus
-    const li = document.querySelectorAll('#habitList .habit-item')[i];
+    const li = document.querySelector('#habitList .habit-item[data-habit-index="' + i + '"]');
     if (li) {
       const pct   = Math.min(100, Math.round((val / (h.targetValue || 1)) * 100));
       const bf    = li.querySelector('.dyn-bar-fill');
@@ -1818,6 +1819,7 @@ window.NH_USER = null;
   </script>
 </body>
 </html>
+
 
 
 
