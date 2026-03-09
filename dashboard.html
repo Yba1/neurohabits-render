@@ -570,10 +570,12 @@ window.NH_USER = null;
           <span>Your Habits</span>
           <span class="habit-count" id="habitCount">0 habits</span>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;margin:10px 0 12px;">
+        <div style="display:flex;gap:8px;align-items:center;margin:10px 0 12px;flex-wrap:wrap;">
           <select class="form-select" id="categoryFilter" onchange="renderAll()" style="max-width:220px;"></select>
           <input class="form-input" id="newCategoryInput" placeholder="Add category" style="max-width:200px;">
           <button class="btn-ghost" onclick="addCustomCategory()">Add</button>
+          <button class="btn-primary" onclick="advanceDemoDay()">Next Demo Day</button>
+          <span class="streak-badge" id="demoDateBadge">Demo: --</span>
         </div>
         <ul id="habitList"></ul>
         <div class="empty-state" id="emptyState">
@@ -687,10 +689,13 @@ window.NH_USER = null;
   let dynamicProgressLog = JSON.parse(localStorage.getItem('nh_dynamic_log')) || {};
   let selectedType = 'static';
   let categories = JSON.parse(localStorage.getItem('nh_categories')) || ['General'];
+  let categoryCollapsed = JSON.parse(localStorage.getItem('nh_category_collapsed')) || {};
+  let demoDayOffset = parseInt(localStorage.getItem('nh_demo_day_offset') || '0', 10);
 
   //  INIT 
   document.addEventListener('DOMContentLoaded', async () => {
     setHeaderDate();
+    updateDemoDateBadge();
     await loadSessionAndHabits();
     refreshCategoryOptions();
     resetDailyIfNeeded();
@@ -737,13 +742,39 @@ window.NH_USER = null;
           streak: Number(h.streak || 0) || 0,
           timeWindow: h.timeWindow || '',
           category: h.category || 'General',
+          deferredUntil: h.deferredUntil || null,
         }));
         localStorage.setItem('nh_habits', JSON.stringify(habits));
       }
     } catch (_) {}
   }
 
-  function todayKey() { return new Date().toISOString().slice(0,10); }
+  function getDemoDate() {
+    const d = new Date();
+    d.setDate(d.getDate() + (Number.isFinite(demoDayOffset) ? demoDayOffset : 0));
+    return d;
+  }
+
+  function todayKey() {
+    return getDemoDate().toISOString().slice(0,10);
+  }
+
+  function updateDemoDateBadge() {
+    const el = document.getElementById('demoDateBadge');
+    if (!el) return;
+    el.textContent = 'Demo: ' + getDemoDate().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+  }
+
+  function advanceDemoDay() {
+    demoDayOffset = (Number.isFinite(demoDayOffset) ? demoDayOffset : 0) + 1;
+    localStorage.setItem('nh_demo_day_offset', String(demoDayOffset));
+    setHeaderDate();
+    updateDemoDateBadge();
+    resetDailyIfNeeded();
+    renderAll();
+    renderHeatmap();
+    showToast('Advanced demo day by 1.');
+  }
 
 
   function normalizeCategories() {
@@ -786,6 +817,9 @@ window.NH_USER = null;
       localStorage.setItem('nh_history', JSON.stringify(history));
     }
     habits.forEach(h => {
+      if (h.deferredUntil && today >= h.deferredUntil) {
+        h.deferredUntil = null;
+      }
       h.completed = false;
       if (h.type === 'dynamic') h.currentValue = 0;
     });
@@ -835,141 +869,201 @@ window.NH_USER = null;
 
     const filterEl = document.getElementById('categoryFilter');
     const selectedCategory = filterEl ? (filterEl.value || 'All') : 'All';
-    const visible = habits.map((h, idx) => ({ h, idx })).filter(x => selectedCategory === 'All' || (x.h.category || 'General') === selectedCategory);
+    const today = todayKey();
+
+    const visible = habits
+      .map((h, idx) => ({ h, idx }))
+      .filter(x => (selectedCategory === 'All' || (x.h.category || 'General') === selectedCategory))
+      .filter(x => !x.h.deferredUntil || x.h.deferredUntil <= today);
 
     if (!visible.length) {
       list.innerHTML = '<li class="mini-habit" style="color:#777;padding:12px;">No habits in this category.</li>';
       return;
     }
 
-    visible.forEach(({ h: habit, idx: i }) => {
-      const li = document.createElement('li');
-      const isDynamic = habit.type === 'dynamic';
-      li.className = 'habit-item ' + (isDynamic ? 'habit-item-dynamic' : 'habit-item-static');
-      if (habit.completed) li.classList.add('completed-item');
-      li.style.animationDelay = (i * 0.04) + 's';
-
-      // Check
-      const check = document.createElement('div');
-      if (!isDynamic) {
-        check.className = 'habit-check' + (habit.completed ? ' done' : '');
-        check.innerHTML = habit.completed ? 'OK' : '';
-        check.onclick   = () => toggleStatic(i);
-      } else {
-        const pct = dynPct(habit);
-        check.className = 'habit-check' + (pct >= 100 ? ' done-dyn' : '');
-        check.innerHTML = pct >= 100 ? 'OK' : '';
-      }
-
-      // Info
-      const info = document.createElement('div');
-      info.className = 'habit-info';
-
-      const name = document.createElement('div');
-      name.className   = 'habit-name' + (habit.completed ? ' done' : '');
-      name.textContent = habit.text;
-
-      const meta = document.createElement('div');
-      meta.className = 'habit-meta';
-
-      const tp = document.createElement('span');
-      tp.className   = 'habit-type-pill ' + (isDynamic ? 'htp-dynamic' : 'htp-static');
-      tp.textContent = habit.type;
-
-      const streak = habit.streak || 0;
-      const sb = document.createElement('span');
-      sb.className = 'streak-badge' + (streak >= 3 ? ' streak-hot' : '');
-      sb.innerHTML = `<span class="streak-fire"></span> ${streak} day streak`;
-
-      meta.appendChild(tp);
-      meta.appendChild(sb);
-
-      const cs = document.createElement('select');
-      cs.className = 'form-select';
-      cs.style.maxWidth = '140px';
-      cs.style.padding = '4px 8px';
-      cs.style.fontSize = '11px';
-      cs.innerHTML = categories.map(c => '<option value="' + c + '">' + c + '</option>').join('');
-      cs.value = habit.category || 'General';
-      cs.onchange = () => { habit.category = cs.value; saveHabits(); renderAll(); };
-      meta.appendChild(cs);
-
-      if (habit.timeWindow) {
-        const tb = document.createElement('span');
-        tb.className = 'streak-badge';
-        tb.textContent = 'Time: ' + habit.timeWindow;
-        meta.appendChild(tb);
-      }
-      info.appendChild(name);
-      info.appendChild(meta);
-
-      // 7-day dot grid
-      info.appendChild(build7DotGrid(habit));
-
-      // Dynamic row
-      if (isDynamic) {
-        const row = document.createElement('div');
-        row.className = 'dynamic-row';
-
-        const inp = document.createElement('input');
-        inp.type      = 'number'; inp.min = '0';
-        inp.value     = habit.currentValue || 0;
-        inp.className = 'dyn-input';
-        inp.oninput   = e => updateDynamic(i, parseFloat(e.target.value) || 0);
-
-        const sep = document.createElement('span');
-        sep.className   = 'dyn-sep';
-        sep.textContent = '/ ' + (habit.targetValue || '?') + (habit.unit ? ' ' + habit.unit : '');
-
-        const bw = document.createElement('div'); bw.className = 'dyn-bar-wrap';
-        const bf = document.createElement('div'); bf.className = 'dyn-bar-fill';
-        bf.style.width = Math.min(100, dynPct(habit)) + '%';
-        bw.appendChild(bf);
-
-        const pl = document.createElement('span');
-        pl.className   = 'dyn-pct';
-        pl.textContent = Math.min(100, dynPct(habit)) + '%';
-
-        row.appendChild(inp); row.appendChild(sep); row.appendChild(bw); row.appendChild(pl);
-        info.appendChild(row);
-      }
-
-      // AI button  gradient pill
-      const aib = document.createElement('button');
-      aib.className = 'ai-btn';
-      aib.id = 'ai-btn-' + i;
-      aib.innerHTML = ' AI';
-      aib.onclick = () => toggleAIPanel(i);
-
-      // Delete
-      const del = document.createElement('button');
-      del.className = 'delete-btn';
-      del.innerHTML = 'X';
-      del.onclick   = () => deleteHabit(i);
-
-      // AI slide-out panel
-      const aiPanel = document.createElement('div');
-      aiPanel.className = 'ai-panel';
-      aiPanel.id = 'ai-panel-' + i;
-      aiPanel.style.cssText = 'padding:0 16px 0;';
-      aiPanel.innerHTML = buildAIPanelHTML(i);
-
-      // Wrapper
-      const wrapper = document.createElement('div');
-      wrapper.style.cssText = 'display:flex;flex-direction:column;';
-      const topRow = document.createElement('div');
-      topRow.className = 'habit-top-row';
-
-      topRow.appendChild(check);
-      topRow.appendChild(info);
-      topRow.appendChild(aib);
-      topRow.appendChild(del);
-      wrapper.appendChild(topRow);
-      wrapper.appendChild(aiPanel);
-
-      li.appendChild(wrapper);
-      list.appendChild(li);
+    const grouped = {};
+    visible.forEach(item => {
+      const category = item.h.category || 'General';
+      if (!grouped[category]) grouped[category] = [];
+      grouped[category].push(item);
     });
+
+    Object.keys(grouped).sort().forEach(category => {
+      const section = document.createElement('li');
+      section.style.listStyle = 'none';
+      section.style.marginBottom = '10px';
+
+      const header = document.createElement('button');
+      header.className = 'btn-ghost';
+      header.style.width = '100%';
+      header.style.display = 'flex';
+      header.style.justifyContent = 'space-between';
+      header.style.alignItems = 'center';
+      header.style.padding = '10px 12px';
+      const collapsed = !!categoryCollapsed[category];
+      const arrow = collapsed ? '>' : 'v';
+      header.innerHTML = '<span>' + category + '</span><span>' + arrow + ' (' + grouped[category].length + ')</span>';
+      header.onclick = () => toggleCategoryGroup(category);
+
+      section.appendChild(header);
+
+      if (!collapsed) {
+        grouped[category].forEach(({ h, idx }) => {
+          section.appendChild(createHabitItem(h, idx));
+        });
+      }
+
+      list.appendChild(section);
+    });
+  }
+
+  function toggleCategoryGroup(category) {
+    categoryCollapsed[category] = !categoryCollapsed[category];
+    localStorage.setItem('nh_category_collapsed', JSON.stringify(categoryCollapsed));
+    renderHabits();
+  }
+
+  function createHabitItem(habit, i) {
+    const li = document.createElement('li');
+    const isDynamic = habit.type === 'dynamic';
+    li.className = 'habit-item ' + (isDynamic ? 'habit-item-dynamic' : 'habit-item-static');
+    if (habit.completed) li.classList.add('completed-item');
+    li.style.animationDelay = (i * 0.04) + 's';
+
+    const check = document.createElement('div');
+    if (!isDynamic) {
+      check.className = 'habit-check' + (habit.completed ? ' done' : '');
+      check.innerHTML = habit.completed ? 'OK' : '';
+      check.onclick = () => toggleStatic(i);
+    } else {
+      const pct = dynPct(habit);
+      check.className = 'habit-check' + (pct >= 100 ? ' done-dyn' : '');
+      check.innerHTML = pct >= 100 ? 'OK' : '';
+    }
+
+    const info = document.createElement('div');
+    info.className = 'habit-info';
+
+    const name = document.createElement('div');
+    name.className = 'habit-name' + (habit.completed ? ' done' : '');
+    name.textContent = habit.text;
+
+    const meta = document.createElement('div');
+    meta.className = 'habit-meta';
+
+    const tp = document.createElement('span');
+    tp.className = 'habit-type-pill ' + (isDynamic ? 'htp-dynamic' : 'htp-static');
+    tp.textContent = habit.type;
+
+    const streak = habit.streak || 0;
+    const sb = document.createElement('span');
+    sb.className = 'streak-badge' + (streak >= 3 ? ' streak-hot' : '');
+    sb.innerHTML = '<span class="streak-fire"></span> ' + streak + ' day streak';
+
+    meta.appendChild(tp);
+    meta.appendChild(sb);
+
+    const cs = document.createElement('select');
+    cs.className = 'form-select';
+    cs.style.maxWidth = '140px';
+    cs.style.padding = '4px 8px';
+    cs.style.fontSize = '11px';
+    cs.innerHTML = categories.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+    cs.value = habit.category || 'General';
+    cs.onchange = () => { habit.category = cs.value; saveHabits(); renderAll(); };
+    meta.appendChild(cs);
+
+    const tb = document.createElement('span');
+    tb.className = 'streak-badge';
+    tb.textContent = 'Time: ' + (habit.timeWindow || 'None');
+    meta.appendChild(tb);
+
+    info.appendChild(name);
+    info.appendChild(meta);
+    info.appendChild(build7DotGrid(habit));
+
+    if (isDynamic) {
+      const row = document.createElement('div');
+      row.className = 'dynamic-row';
+
+      const inp = document.createElement('input');
+      inp.type = 'number'; inp.min = '0';
+      inp.value = habit.currentValue || 0;
+      inp.className = 'dyn-input';
+      inp.oninput = e => updateDynamic(i, parseFloat(e.target.value) || 0);
+
+      const sep = document.createElement('span');
+      sep.className = 'dyn-sep';
+      sep.textContent = '/ ' + (habit.targetValue || '?') + (habit.unit ? ' ' + habit.unit : '');
+
+      const bw = document.createElement('div'); bw.className = 'dyn-bar-wrap';
+      const bf = document.createElement('div'); bf.className = 'dyn-bar-fill';
+      bf.style.width = Math.min(100, dynPct(habit)) + '%';
+      bw.appendChild(bf);
+
+      const pl = document.createElement('span');
+      pl.className = 'dyn-pct';
+      pl.textContent = Math.min(100, dynPct(habit)) + '%';
+
+      row.appendChild(inp); row.appendChild(sep); row.appendChild(bw); row.appendChild(pl);
+      info.appendChild(row);
+    }
+
+    const aib = document.createElement('button');
+    aib.className = 'ai-btn';
+    aib.id = 'ai-btn-' + i;
+    aib.innerHTML = 'AI';
+    aib.onclick = () => toggleAIPanel(i);
+
+    const moveBtn = document.createElement('button');
+    moveBtn.className = 'btn-ghost';
+    moveBtn.style.marginLeft = '6px';
+    moveBtn.style.fontSize = '11px';
+    moveBtn.textContent = 'Move +1 day';
+    moveBtn.onclick = () => moveHabitToNextDay(i);
+
+    const del = document.createElement('button');
+    del.className = 'delete-btn';
+    del.innerHTML = 'X';
+    del.onclick = () => deleteHabit(i);
+
+    const aiPanel = document.createElement('div');
+    aiPanel.className = 'ai-panel';
+    aiPanel.id = 'ai-panel-' + i;
+    aiPanel.style.cssText = 'padding:0 16px 0;';
+    aiPanel.innerHTML = buildAIPanelHTML(i);
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;';
+    const topRow = document.createElement('div');
+    topRow.className = 'habit-top-row';
+
+    topRow.appendChild(check);
+    topRow.appendChild(info);
+    topRow.appendChild(aib);
+    topRow.appendChild(moveBtn);
+    topRow.appendChild(del);
+    wrapper.appendChild(topRow);
+    wrapper.appendChild(aiPanel);
+
+    li.appendChild(wrapper);
+    return li;
+  }
+
+  function moveHabitToNextDay(i) {
+    const h = habits[i];
+    if (!h) return;
+    const tomorrow = getDemoDate();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const key = tomorrow.toISOString().slice(0, 10);
+    h.deferredUntil = key;
+    h.completed = false;
+    if (h.type === 'dynamic') h.currentValue = 0;
+    h.lastUpdated = new Date().toISOString();
+    saveHabits();
+    renderAll();
+    renderHeatmap();
+    showToast('Moved "' + h.text + '" to next day (demo).');
   }
 
   //  ACTIONS 
@@ -1021,7 +1115,7 @@ window.NH_USER = null;
   //  STREAK 
   function updateStreak(h) {
     if (!h.lastUpdated) { h.streak = 1; return; }
-    const last = new Date(h.lastUpdated), today = new Date();
+    const last = new Date(h.lastUpdated), today = getDemoDate();
     last.setHours(0,0,0,0); today.setHours(0,0,0,0);
     const diff = Math.round((today - last) / 86400000);
     h.streak = (diff === 0 || diff === 1) ? (h.streak || 0) + 1 : 1;
@@ -1158,7 +1252,7 @@ window.NH_USER = null;
       completed: false, currentValue: 0,
       targetValue: selectedType === 'dynamic' ? target : 1,
       unit: unit || '',
-      timeWindow: timeWindow || '',
+      timeWindow: timeWindow || 'None',
       category: category,
       created: new Date().toISOString(), lastUpdated: null, streak: 0
     });
@@ -1386,17 +1480,27 @@ window.NH_USER = null;
           if (cRes.ok) {
             const cData = await cRes.json();
             if (Array.isArray(cData.assignments) && cData.assignments.length) {
-              const cCard = document.createElement('div');
-              cCard.className = 'insight-card';
-              const catNames = Array.isArray(cData.categories) ? cData.categories.join(', ') : 'suggested categories';
-              cCard.innerHTML = '<div class="insight-quote">Category Suggestions</div>Suggested groups: <strong>' + catNames + '</strong>';
-              const applyBtn = document.createElement('button');
-              applyBtn.className = 'btn-primary';
-              applyBtn.style.marginTop = '10px';
-              applyBtn.textContent = 'Apply suggested categories';
-              applyBtn.onclick = () => applyCategorySuggestionBundle(cData);
-              cCard.appendChild(applyBtn);
-              list.appendChild(cCard);
+              const map = new Map(cData.assignments.map(a => [String(a.habit || '').toLowerCase(), String(a.category || 'General')]));
+              const wouldChange = habits.some(h => {
+                const key = String(h.text || '').toLowerCase();
+                if (!map.has(key)) return false;
+                return (map.get(key) || 'General') !== (h.category || 'General');
+              });
+              const newCats = Array.isArray(cData.categories) ? cData.categories.filter(c => c && !categories.includes(c)) : [];
+
+              if (wouldChange || newCats.length > 0) {
+                const cCard = document.createElement('div');
+                cCard.className = 'insight-card';
+                const catNames = Array.isArray(cData.categories) ? cData.categories.join(', ') : 'suggested categories';
+                cCard.innerHTML = '<div class="insight-quote">Category Suggestions</div>Suggested groups: <strong>' + catNames + '</strong>';
+                const applyBtn = document.createElement('button');
+                applyBtn.className = 'btn-primary';
+                applyBtn.style.marginTop = '10px';
+                applyBtn.textContent = 'Apply suggested categories';
+                applyBtn.onclick = () => applyCategorySuggestionBundle(cData);
+                cCard.appendChild(applyBtn);
+                list.appendChild(cCard);
+              }
             }
           }
         } catch (_) {}
@@ -1614,6 +1718,13 @@ window.NH_USER = null;
   </script>
 </body>
 </html>
+
+
+
+
+
+
+
 
 
 

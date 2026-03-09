@@ -283,6 +283,7 @@ def _normalize_habit(raw: dict[str, Any]) -> dict[str, Any] | None:
         "currentValue": current_value,
         "timeWindow": time_window,
         "category": str(raw.get("category", "General") or "General"),
+        "deferredUntil": raw.get("deferredUntil"),
         "created": raw.get("created") or datetime.utcnow().isoformat() + "Z",
         "lastUpdated": raw.get("lastUpdated") or datetime.utcnow().isoformat() + "Z",
         "streak": int(raw.get("streak", 0) or 0),
@@ -808,6 +809,8 @@ def health() -> Any:
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port, debug=False)
+
+
 
 
 
