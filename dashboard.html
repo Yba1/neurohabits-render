@@ -670,6 +670,18 @@ window.NH_USER = null;
           <label class="form-label">Category</label>
           <select class="form-select" id="modalCategory"></select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Days</label>
+          <div id="modalDays" style="display:flex;gap:8px;flex-wrap:wrap;">
+            <label class="streak-badge"><input type="checkbox" class="day-check" value="Mon" checked> Mon</label>
+            <label class="streak-badge"><input type="checkbox" class="day-check" value="Tue" checked> Tue</label>
+            <label class="streak-badge"><input type="checkbox" class="day-check" value="Wed" checked> Wed</label>
+            <label class="streak-badge"><input type="checkbox" class="day-check" value="Thu" checked> Thu</label>
+            <label class="streak-badge"><input type="checkbox" class="day-check" value="Fri" checked> Fri</label>
+            <label class="streak-badge"><input type="checkbox" class="day-check" value="Sat" checked> Sat</label>
+            <label class="streak-badge"><input type="checkbox" class="day-check" value="Sun" checked> Sun</label>
+          </div>
+        </div>
 <div class="modal-actions">
           <button class="btn-ghost"   onclick="closeModal()">Cancel</button>
           <button class="btn-primary" onclick="addHabitFromModal()">Add Habit</button>
@@ -705,7 +717,7 @@ window.NH_USER = null;
 
   function setHeaderDate() {
     document.getElementById('headerDate').textContent =
-      new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+      getDemoDate().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   }
 
   function applyUsernameToHeader() {
@@ -743,6 +755,7 @@ window.NH_USER = null;
           timeWindow: h.timeWindow || '',
           category: h.category || 'General',
           deferredUntil: h.deferredUntil || null,
+          activeDays: Array.isArray(h.activeDays) && h.activeDays.length ? h.activeDays : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
         }));
         localStorage.setItem('nh_habits', JSON.stringify(habits));
       }
@@ -799,6 +812,21 @@ window.NH_USER = null;
     }
   }
 
+
+  function getSelectedDays() {
+    const checks = Array.from(document.querySelectorAll('#modalDays .day-check'));
+    const selected = checks.filter(c => c.checked).map(c => c.value);
+    return selected.length ? selected : ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  }
+
+  function resetSelectedDays() {
+    const checks = Array.from(document.querySelectorAll('#modalDays .day-check'));
+    checks.forEach(c => { c.checked = true; });
+  }
+
+  function currentDayShort() {
+    return getDemoDate().toLocaleDateString('en-US', { weekday: 'short' });
+  }
   function addCustomCategory() {
     const input = document.getElementById('newCategoryInput');
     const name = input ? input.value.trim() : '';
@@ -874,7 +902,8 @@ window.NH_USER = null;
     const visible = habits
       .map((h, idx) => ({ h, idx }))
       .filter(x => (selectedCategory === 'All' || (x.h.category || 'General') === selectedCategory))
-      .filter(x => !x.h.deferredUntil || x.h.deferredUntil <= today);
+      .filter(x => !x.h.deferredUntil || x.h.deferredUntil <= today)
+      .filter(x => !Array.isArray(x.h.activeDays) || x.h.activeDays.includes(currentDayShort()));
 
     if (!visible.length) {
       list.innerHTML = '<li class="mini-habit" style="color:#777;padding:12px;">No habits in this category.</li>';
@@ -958,6 +987,8 @@ window.NH_USER = null;
     const streak = habit.streak || 0;
     const sb = document.createElement('span');
     sb.className = 'streak-badge' + (streak >= 3 ? ' streak-hot' : '');
+    sb.style.padding = '8px 14px';
+    sb.style.minWidth = '120px';
     sb.innerHTML = '<span class="streak-fire"></span> ' + streak + ' day streak';
 
     meta.appendChild(tp);
@@ -975,6 +1006,8 @@ window.NH_USER = null;
 
     const tb = document.createElement('span');
     tb.className = 'streak-badge';
+    tb.style.padding = '8px 14px';
+    tb.style.minWidth = '120px';
     tb.textContent = 'Time: ' + (habit.timeWindow || 'None');
     meta.appendChild(tb);
 
@@ -1014,13 +1047,6 @@ window.NH_USER = null;
     aib.id = 'ai-btn-' + i;
     aib.innerHTML = 'AI';
     aib.onclick = () => toggleAIPanel(i);
-
-    const moveBtn = document.createElement('button');
-    moveBtn.className = 'btn-ghost';
-    moveBtn.style.marginLeft = '6px';
-    moveBtn.style.fontSize = '11px';
-    moveBtn.textContent = 'Move +1 day';
-    moveBtn.onclick = () => moveHabitToNextDay(i);
 
     const del = document.createElement('button');
     del.className = 'delete-btn';
@@ -1204,6 +1230,7 @@ window.NH_USER = null;
     document.getElementById('modalUnit').value      = '';
     document.getElementById('modalTimeWindow').value = '';
     if (document.getElementById('modalCategory')) document.getElementById('modalCategory').value = 'General';
+    resetSelectedDays();
     clearErrors();
   }
 
@@ -1233,6 +1260,7 @@ window.NH_USER = null;
     const unit   = document.getElementById('modalUnit').value.trim();
     const timeWindow = document.getElementById('modalTimeWindow').value.trim();
     const category = (document.getElementById('modalCategory') ? document.getElementById('modalCategory').value : 'General') || 'General';
+    const activeDays = getSelectedDays();
     let valid = true;
 
     if (!text) {
@@ -1254,6 +1282,7 @@ window.NH_USER = null;
       unit: unit || '',
       timeWindow: timeWindow || 'None',
       category: category,
+      activeDays: activeDays,
       created: new Date().toISOString(), lastUpdated: null, streak: 0
     });
 
@@ -1718,6 +1747,9 @@ window.NH_USER = null;
   </script>
 </body>
 </html>
+
+
+
 
 
 
